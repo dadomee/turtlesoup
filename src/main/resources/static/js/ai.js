@@ -139,6 +139,7 @@ async function ask() {
       solved = true;
       input.disabled = true;
       appendBotText(`정답입니다! ${questionCount}번 만에 맞히셨어요. 🎉`);
+      await revealSolution();
       recordSolve();
     }
   } catch (e) {
@@ -147,6 +148,34 @@ async function ask() {
     asking = false;
     if (!solved) askBtn.disabled = false;
   }
+}
+
+async function revealSolution() {
+  try {
+    const r = await fetch(`/api/puzzles/${currentPuzzleId}/solution`);
+    if (!r.ok) return;
+    const s = await r.json();
+    appendBotSolution(s.solution);
+  } catch (e) {
+    // 해설 노출 실패는 게임 진행에 치명적이지 않으므로 조용히 무시
+  }
+}
+
+function appendBotSolution(text) {
+  const box = document.createElement("div");
+  box.className = "msg-text";
+  const label = document.createElement("div");
+  label.style.fontWeight = "500";
+  label.style.marginBottom = "5px";
+  label.textContent = "📖 전체 해설";
+  const body = document.createElement("div");
+  body.style.background = "var(--info-bg)";
+  body.style.borderRadius = "8px";
+  body.style.padding = "10px 12px";
+  body.style.lineHeight = "1.7";
+  body.textContent = text;
+  box.append(label, body);
+  msgRow("bot", "추리비서 AI", "AI", box);
 }
 
 async function recordSolve() {
