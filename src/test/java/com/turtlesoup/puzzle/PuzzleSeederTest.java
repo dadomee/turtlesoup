@@ -18,4 +18,13 @@ class PuzzleSeederTest {
         assertThat(repository.findAll())
             .anyMatch(p -> p.getTitle().contains("바다거북"));
     }
+
+    @Test
+    void seededPuzzlesHaveThreeHints() {
+        Puzzle p = repository.findAll().stream()
+            .filter(x -> x.getTitle().contains("바다거북")).findFirst().orElseThrow();
+        assertThat(p.getHint(1)).isNotBlank();
+        assertThat(p.getHint(2)).isNotBlank();
+        assertThat(p.getHint(3)).isNotBlank();
+    }
 }
