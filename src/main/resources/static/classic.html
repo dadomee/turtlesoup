@@ -3,32 +3,69 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>바다거북스프 — 문제 풀기</title>
+  <title># 문제-보관함</title>
   <link rel="stylesheet" href="/css/style.css">
 </head>
 <body>
-  <h1>🐢 문제 풀기</h1>
-  <p><button onclick="location.href='/'" style="background:#888">← 모드 선택</button></p>
+  <div class="app">
+    <nav class="rail" aria-label="앱">
+      <div class="rail-item active"><span class="ic">💬</span>채팅</div>
+      <div class="rail-item"><span class="ic">👥</span>팀</div>
+      <div class="rail-item"><span class="ic">📅</span>일정</div>
+      <div class="rail-item"><span class="ic">📁</span>파일</div>
+    </nav>
 
-  <div id="list-view">
-    <h2>문제 목록</h2>
-    <div id="puzzle-list"></div>
+    <aside class="sidebar">
+      <div class="ws-header">(주)성실상사</div>
+      <div class="nav">
+        <span class="nav-label">워크스페이스</span>
+        <a class="nav-item" href="/"># 홈</a>
+        <a class="nav-item active" href="/classic.html"># 문제-보관함</a>
+        <a class="nav-item" href="/ai.html">@ 추리비서 AI</a>
+        <span class="nav-item disabled"># 팀-라운지</span>
+      </div>
+      <div class="sidebar-foot"><span class="status-dot"></span> <span data-me-name>게스트</span> · 근무중</div>
+    </aside>
+
+    <div class="main">
+      <header class="topbar">
+        <span class="topbar-title"># 문제-보관함</span>
+        <span class="topbar-search">메시지, 파일, 사람 검색</span>
+        <span class="topbar-spacer"></span>
+        <span class="avatar" data-me-avatar>?</span>
+      </header>
+
+      <div class="content">
+        <div class="content-narrow">
+
+          <div id="list-view">
+            <h1># 문제-보관함</h1>
+            <p class="muted" style="margin-bottom:16px;">보관된 추리 문제 목록입니다. 하나를 열어 혼자 추리한 뒤 정답을 확인하세요.</p>
+            <div id="puzzle-list"></div>
+          </div>
+
+          <div id="play-view" class="hidden">
+            <p><button class="ghost" onclick="showList()">← 목록으로</button></p>
+            <div class="card">
+              <h2 id="play-title"></h2>
+              <p class="muted" id="play-meta"></p>
+              <p id="play-scenario" style="line-height:1.7;"></p>
+            </div>
+            <button id="reveal-btn">정답 보기</button>
+            <div id="solution-card" class="card hidden" style="margin-top:12px;">
+              <h3>정답</h3>
+              <p id="play-solution" style="line-height:1.7;"></p>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
   </div>
 
-  <div id="play-view" class="hidden">
-    <div class="card">
-      <h2 id="play-title"></h2>
-      <p class="muted" id="play-meta"></p>
-      <p id="play-scenario"></p>
-    </div>
-    <button id="reveal-btn">정답 보기</button>
-    <div id="solution-card" class="card hidden">
-      <h3>정답</h3>
-      <p id="play-solution"></p>
-    </div>
-    <p><button onclick="showList()" style="background:#888">← 목록으로</button></p>
-  </div>
-
+  <script src="/js/nickname.js"></script>
+  <script src="/js/shell.js"></script>
+  <script src="/js/boss.js"></script>
   <script src="/js/classic.js"></script>
 </body>
 </html>

@@ -1,36 +1,151 @@
+/* 바다거북스프 — 업무 메신저(팀즈) 위장 테마 */
+:root {
+  --accent: #4f52c9;        /* 팀즈풍 블루-바이올렛 */
+  --accent-dark: #3b3e9e;
+  --rail: #2f327a;          /* 좌측 아이콘 레일(진한 블루) */
+  --page: #f0f1f6;
+  --surface: #ffffff;
+  --sidebar: #f5f6fa;
+  --border: #e2e4ec;
+  --text: #1b1d29;
+  --muted: #5b5f73;
+  --hint: #8a8e9e;
+  --ok: #1d7a4d;
+  --ok-bg: #e6f4ec;
+  --no: #b3261e;
+  --no-bg: #fbeae9;
+  --warn: #8a5a00;
+  --warn-bg: #fdf0d9;
+  --info-bg: #e7e8fb;
+}
+
 * { box-sizing: border-box; }
+html, body { height: 100%; }
 body {
-  font-family: system-ui, "Apple SD Gothic Neo", sans-serif;
-  max-width: 720px;
-  margin: 0 auto;
-  padding: 24px;
-  background: #f7f6f2;
-  color: #222;
+  margin: 0;
+  font-family: system-ui, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+  background: var(--page);
+  color: var(--text);
+  font-size: 14px;
 }
-h1 { font-size: 1.6rem; }
+
+/* ===== 앱 셸 (레일 + 사이드바 + 메인) ===== */
+.app { display: flex; height: 100vh; overflow: hidden; }
+
+.rail {
+  width: 68px; flex-shrink: 0; background: var(--rail);
+  display: flex; flex-direction: column; align-items: center;
+  padding-top: 8px; gap: 2px;
+}
+.rail-item {
+  width: 60px; padding: 8px 0; border-radius: 8px; text-align: center;
+  color: #c8caf2; font-size: 10.5px; cursor: default; user-select: none;
+}
+.rail-item .ic { font-size: 18px; display: block; line-height: 1.3; }
+.rail-item.active { background: rgba(255,255,255,0.14); color: #fff; }
+
+.sidebar {
+  width: 236px; flex-shrink: 0; background: var(--sidebar);
+  border-right: 1px solid var(--border); display: flex; flex-direction: column;
+}
+.ws-header {
+  padding: 14px 16px; font-weight: 500; font-size: 15px;
+  border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 6px;
+}
+.nav { padding: 8px; display: flex; flex-direction: column; gap: 2px; flex: 1; }
+.nav-label { font-size: 11px; color: var(--hint); padding: 8px 10px 4px; }
+.nav-item {
+  display: block; padding: 8px 10px; border-radius: 8px; text-decoration: none;
+  color: var(--text); font-size: 13.5px;
+}
+.nav-item:hover { background: #e9eaf2; }
+.nav-item.active { background: var(--info-bg); color: var(--accent-dark); font-weight: 500; }
+.nav-item.disabled { color: var(--hint); pointer-events: none; }
+.sidebar-foot {
+  padding: 12px 16px; font-size: 12px; color: var(--muted);
+  border-top: 1px solid var(--border); display: flex; align-items: center; gap: 8px;
+}
+.status-dot { width: 9px; height: 9px; border-radius: 50%; background: #2ecc8f; display: inline-block; }
+
+.main { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.topbar {
+  height: 48px; flex-shrink: 0; background: var(--accent); color: #fff;
+  display: flex; align-items: center; gap: 12px; padding: 0 16px;
+}
+.topbar-title { font-weight: 500; font-size: 14px; }
+.topbar-search {
+  flex: 1; max-width: 420px; background: rgba(255,255,255,0.18); color: #eef;
+  border-radius: 6px; padding: 6px 12px; font-size: 12.5px;
+}
+.topbar-spacer { flex: 1; }
+.avatar {
+  width: 30px; height: 30px; border-radius: 50%; background: #fff; color: var(--accent-dark);
+  display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 500;
+}
+
+.content { flex: 1; overflow-y: auto; padding: 20px 24px; }
+.content-narrow { max-width: 760px; margin: 0 auto; }
+
+/* ===== 공통 요소 ===== */
+h1 { font-size: 18px; font-weight: 500; margin: 0 0 14px; }
+h2 { font-size: 15px; font-weight: 500; margin: 0 0 10px; }
+h3 { font-size: 14px; font-weight: 500; margin: 0 0 6px; }
+
 button {
-  font-size: 1rem;
-  padding: 10px 16px;
-  border: none;
-  border-radius: 8px;
-  background: #2e7d6b;
-  color: #fff;
-  cursor: pointer;
+  font-size: 13.5px; font-family: inherit; padding: 9px 16px; border: none;
+  border-radius: 8px; background: var(--accent); color: #fff; cursor: pointer;
 }
-button:hover { background: #275f53; }
+button:hover { background: var(--accent-dark); }
+button:disabled { background: #b9bbd6; cursor: default; }
+button.ghost { background: transparent; color: var(--accent-dark); border: 1px solid var(--border); }
+button.ghost:hover { background: #ecedf6; }
+
 .card {
-  background: #fff;
-  border-radius: 12px;
-  padding: 16px;
-  margin: 12px 0;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+  background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
+  padding: 14px 16px; margin: 0 0 12px;
 }
-.muted { color: #777; font-size: 0.9rem; }
+.card.clickable { cursor: pointer; }
+.card.clickable:hover { border-color: var(--accent); }
+.muted { color: var(--muted); font-size: 12.5px; }
+.hidden { display: none !important; }
+
 input[type=text] {
-  font-size: 1rem;
-  padding: 8px;
-  border: 1px solid #ccc;
-  border-radius: 8px;
-  width: 60%;
+  font-size: 14px; font-family: inherit; padding: 9px 12px;
+  border: 1px solid var(--border); border-radius: 8px; background: var(--surface);
+  color: var(--text); width: 100%;
 }
-.hidden { display: none; }
+input[type=text]:focus { outline: none; border-color: var(--accent); }
+
+.badge { display: inline-block; padding: 2px 9px; border-radius: 12px; font-size: 11px; }
+.badge.diff { background: var(--info-bg); color: var(--accent-dark); }
+
+/* ===== 채팅(메신저) 스타일 ===== */
+.chat-log { display: flex; flex-direction: column; gap: 14px; }
+.msg { display: flex; gap: 10px; }
+.msg-avatar {
+  width: 32px; height: 32px; border-radius: 8px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 500;
+}
+.msg-avatar.bot { background: var(--rail); color: #fff; }
+.msg-avatar.me { background: var(--info-bg); color: var(--accent-dark); }
+.msg-name { font-weight: 500; font-size: 13px; }
+.msg-time { font-size: 11px; color: var(--hint); font-weight: 400; margin-left: 6px; }
+.msg-text { margin-top: 2px; color: var(--text); font-size: 13.5px; line-height: 1.55; }
+.verdict { display: inline-block; padding: 3px 12px; border-radius: 14px; font-size: 13px; font-weight: 500; margin-top: 3px; }
+.verdict.yes { background: var(--ok-bg); color: var(--ok); }
+.verdict.no { background: var(--no-bg); color: var(--no); }
+.verdict.irrelevant { background: #eef0f4; color: var(--muted); }
+.verdict.correct { background: var(--warn-bg); color: var(--warn); }
+.verdict.unknown { background: #eef0f4; color: var(--muted); }
+
+.composer { display: flex; gap: 8px; margin-top: 14px; }
+.composer input { flex: 1; }
+
+/* ===== 보스키 힌트 / 오버레이 (boss.js가 주입) ===== */
+.boss-hint {
+  position: fixed; right: 14px; bottom: 14px; z-index: 50;
+  background: rgba(47,50,122,0.92); color: #fff; font-size: 11.5px;
+  padding: 6px 11px; border-radius: 8px; cursor: pointer; user-select: none;
+}
+.boss-overlay { position: fixed; inset: 0; z-index: 9999; display: none; background: #faf9f8; }
+.boss-overlay.show { display: block; }

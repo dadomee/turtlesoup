@@ -12,22 +12,17 @@ async function loadList() {
   container.textContent = "";
   puzzles.forEach(p => {
     const div = document.createElement("div");
-    div.className = "card";
+    div.className = "card clickable";
+    div.addEventListener("click", () => openPuzzle(p.id));
 
     // 사용자 입력 텍스트가 들어올 미래 모드에 대비해 textContent로 안전하게 렌더링
-    const title = document.createElement("b");
+    const title = document.createElement("h3");
     title.textContent = p.title;
     const meta = document.createElement("span");
-    meta.className = "muted";
-    meta.textContent = ` [${p.difficulty}]`;
+    meta.className = "badge diff";
+    meta.textContent = p.difficulty;
 
-    const btn = document.createElement("button");
-    btn.textContent = "풀기";
-    btn.style.marginTop = "8px";
-    btn.style.display = "block";
-    btn.addEventListener("click", () => openPuzzle(p.id));
-
-    div.append(title, meta, btn);
+    div.append(title, meta);
     container.appendChild(div);
   });
 }

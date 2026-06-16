@@ -7,12 +7,16 @@ let solved = false;
 let asking = false; // 요청 진행 중 중복 제출 방지
 
 const VERDICT_LABEL = {
-  YES: "예 ✅",
-  NO: "아니오 ❌",
-  IRRELEVANT: "상관없음 🤷",
-  CORRECT: "정답! 🎉",
+  YES: "예",
+  NO: "아니오",
+  IRRELEVANT: "상관없음",
+  CORRECT: "정답!",
   UNKNOWN: "잘 모르겠어요 — 다르게 물어봐 주세요"
 };
+
+function meName() {
+  return (typeof getNickname === "function" && getNickname()) || "나";
+}
 
 async function loadList() {
   const res = await fetch("/api/puzzles");
@@ -25,18 +29,14 @@ async function loadList() {
   container.textContent = "";
   puzzles.forEach(p => {
     const div = document.createElement("div");
-    div.className = "card";
-    const title = document.createElement("b");
+    div.className = "card clickable";
+    div.addEventListener("click", () => openPuzzle(p.id));
+    const title = document.createElement("h3");
     title.textContent = p.title;
     const meta = document.createElement("span");
-    meta.className = "muted";
-    meta.textContent = ` [${p.difficulty}]`;
-    const btn = document.createElement("button");
-    btn.textContent = "이 문제로 질문";
-    btn.style.marginTop = "8px";
-    btn.style.display = "block";
-    btn.addEventListener("click", () => openPuzzle(p.id));
-    div.append(title, meta, btn);
+    meta.className = "badge diff";
+    meta.textContent = p.difficulty;
+    div.append(title, meta);
     container.appendChild(div);
   });
 }
@@ -51,26 +51,61 @@ async function openPuzzle(id) {
   solved = false;
   document.getElementById("q-count").textContent = "0";
   document.getElementById("chat-log").textContent = "";
-  document.getElementById("question-input").value = "";
-  document.getElementById("question-input").disabled = false;
+  const input = document.getElementById("question-input");
+  input.value = "";
+  input.disabled = false;
   document.getElementById("ask-btn").disabled = false;
 
   document.getElementById("play-title").textContent = p.title;
   document.getElementById("play-meta").textContent = `난이도: ${p.difficulty}`;
   document.getElementById("play-scenario").textContent = p.scenario;
 
+  appendBotText("이 사건의 진상을 추리해 보세요. 예/아니오로 답할 수 있는 질문을 던지면 됩니다.");
+
   listView.classList.add("hidden");
   playView.classList.remove("hidden");
 }
 
-function appendChat(who, text) {
+function msgRow(side, name, avatarText, contentEl) {
+  const row = document.createElement("div");
+  row.className = "msg";
+  const av = document.createElement("div");
+  av.className = "msg-avatar " + side;
+  av.textContent = avatarText;
+  const body = document.createElement("div");
+  const nm = document.createElement("div");
+  nm.className = "msg-name";
+  nm.textContent = name;
+  body.appendChild(nm);
+  body.appendChild(contentEl);
+  row.append(av, body);
   const log = document.getElementById("chat-log");
-  const line = document.createElement("p");
-  const label = document.createElement("b");
-  label.textContent = who + ": ";
-  line.appendChild(label);
-  line.appendChild(document.createTextNode(text));
-  log.appendChild(line);
+  log.appendChild(row);
+  const content = document.querySelector(".content");
+  if (content) content.scrollTop = content.scrollHeight;
+}
+
+function textNode(t) {
+  const d = document.createElement("div");
+  d.className = "msg-text";
+  d.textContent = t;
+  return d;
+}
+
+function appendMyMsg(text) {
+  const me = meName();
+  msgRow("me", me, me.charAt(0).toUpperCase(), textNode(text));
+}
+
+function appendBotText(text) {
+  msgRow("bot", "추리비서 AI", "AI", textNode(text));
+}
+
+function appendBotVerdict(verdict) {
+  const pill = document.createElement("span");
+  pill.className = "verdict " + verdict.toLowerCase();
+  pill.textContent = VERDICT_LABEL[verdict] || verdict;
+  msgRow("bot", "추리비서 AI", "AI", pill);
 }
 
 async function ask() {
@@ -82,7 +117,7 @@ async function ask() {
 
   asking = true;
   askBtn.disabled = true;
-  appendChat("나", q);
+  appendMyMsg(q);
   input.value = "";
   questionCount += 1;
   document.getElementById("q-count").textContent = String(questionCount);
@@ -94,27 +129,28 @@ async function ask() {
       body: JSON.stringify({ question: q })
     });
     if (!res.ok) {
-      appendChat("AI", "답변을 가져오지 못했습니다. (Ollama가 켜져 있는지 확인하세요)");
+      appendBotText("답변을 가져오지 못했습니다. (Ollama가 켜져 있는지 확인하세요)");
       return;
     }
     const data = await res.json();
-    appendChat("AI", VERDICT_LABEL[data.verdict] || data.verdict);
+    appendBotVerdict(data.verdict);
 
     if (data.verdict === "CORRECT") {
       solved = true;
       input.disabled = true;
+      appendBotText(`정답입니다! ${questionCount}번 만에 맞히셨어요. 🎉`);
       recordSolve();
     }
   } catch (e) {
-    appendChat("AI", "서버에 연결하지 못했습니다. 잠시 후 다시 시도해 주세요.");
+    appendBotText("서버에 연결하지 못했습니다. 잠시 후 다시 시도해 주세요.");
   } finally {
     asking = false;
-    if (!solved) askBtn.disabled = false; // 정답 전이면 다시 질문 가능
+    if (!solved) askBtn.disabled = false;
   }
 }
 
 async function recordSolve() {
-  const nickname = (typeof getNickname === "function" && getNickname()) || "익명";
+  const nickname = meName();
   try {
     const res = await fetch(`/api/ai/${currentPuzzleId}/solve`, {
       method: "POST",
