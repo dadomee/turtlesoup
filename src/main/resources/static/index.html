@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>협업 워크스페이스</title>
   <link rel="stylesheet" href="/css/style.css">
+  <script src="/js/theme.js"></script>
 </head>
 <body>
   <div class="app">
@@ -64,6 +65,15 @@
               <p class="muted">실시간 멀티플레이 — 곧 추가됩니다.</p>
             </div>
 
+            <div class="card">
+              <h3>테마</h3>
+              <p class="muted">메신저 분위기를 고르세요. 바로 적용됩니다.</p>
+              <div style="display:flex; gap:8px; margin-top:10px;">
+                <button class="theme-btn" data-theme-val="teams">팀즈 · 블루</button>
+                <button class="theme-btn" data-theme-val="slack">슬랙 · 퍼플</button>
+              </div>
+            </div>
+
             <p style="margin-top:8px;"><button class="ghost" onclick="changeNickname()">이름 변경</button></p>
           </div>
 
@@ -103,6 +113,17 @@
     document.getElementById("nickname-input").addEventListener("keydown", (e) => {
       if (e.key === "Enter") document.getElementById("nickname-save").click();
     });
+
+    function renderThemeButtons() {
+      const cur = (typeof getTheme === "function" && getTheme()) || "teams";
+      document.querySelectorAll(".theme-btn").forEach(b => {
+        b.classList.toggle("ghost", b.dataset.themeVal !== cur);
+      });
+    }
+    document.querySelectorAll(".theme-btn").forEach(b => {
+      b.addEventListener("click", () => { setTheme(b.dataset.themeVal); renderThemeButtons(); });
+    });
+    renderThemeButtons();
 
     render();
   </script>

@@ -1,5 +1,5 @@
-/* 바다거북스프 — 업무 메신저(팀즈) 위장 테마 */
-:root {
+/* 바다거북스프 — 업무 메신저 위장 테마 (팀즈/슬랙 전환) */
+:root, [data-theme="teams"] {
   --accent: #4f52c9;        /* 팀즈풍 블루-바이올렛 */
   --accent-dark: #3b3e9e;
   --rail: #2f327a;          /* 좌측 아이콘 레일(진한 블루) */
@@ -17,6 +17,14 @@
   --warn: #8a5a00;
   --warn-bg: #fdf0d9;
   --info-bg: #e7e8fb;
+}
+
+/* 슬랙풍(어버진/퍼플) — 색 변수만 덮어쓴다 */
+[data-theme="slack"] {
+  --accent: #611f69;
+  --accent-dark: #4a154b;
+  --rail: #3f0e40;
+  --info-bg: #f3e6f5;
 }
 
 * { box-sizing: border-box; }
@@ -144,7 +152,7 @@ input[type=text]:focus { outline: none; border-color: var(--accent); }
 /* ===== 보스키 힌트 / 오버레이 (boss.js가 주입) ===== */
 .boss-hint {
   position: fixed; right: 14px; bottom: 14px; z-index: 50;
-  background: rgba(47,50,122,0.92); color: #fff; font-size: 11.5px;
+  background: var(--rail); color: #fff; font-size: 11.5px;
   padding: 6px 11px; border-radius: 8px; cursor: pointer; user-select: none;
 }
 .boss-overlay { position: fixed; inset: 0; z-index: 9999; display: none; background: #faf9f8; }
