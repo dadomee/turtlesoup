@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>바다거북스프 — 문제 풀기</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <h1>🐢 문제 풀기</h1>
+  <p><button onclick="location.href='/'" style="background:#888">← 모드 선택</button></p>
+
+  <div id="list-view">
+    <h2>문제 목록</h2>
+    <div id="puzzle-list"></div>
+  </div>
+
+  <div id="play-view" class="hidden">
+    <div class="card">
+      <h2 id="play-title"></h2>
+      <p class="muted" id="play-meta"></p>
+      <p id="play-scenario"></p>
+    </div>
+    <button id="reveal-btn">정답 보기</button>
+    <div id="solution-card" class="card hidden">
+      <h3>정답</h3>
+      <p id="play-solution"></p>
+    </div>
+    <p><button onclick="showList()" style="background:#888">← 목록으로</button></p>
+  </div>
+
+  <script src="/js/classic.js"></script>
+</body>
+</html>
