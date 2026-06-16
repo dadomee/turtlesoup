@@ -52,4 +52,20 @@ class AiControllerTest {
                 .content("{\"question\":\"\"}"))
             .andExpect(status().isBadRequest());
     }
+
+    @Test
+    void hintEndpointReturnsGeneratedHint() throws Exception {
+        when(service.hint(1L, 2)).thenReturn("이 사건은 보이는 것과 다릅니다.");
+        mockMvc.perform(post("/api/ai/1/hint/2"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.n").value(2))
+            .andExpect(jsonPath("$.hint").value("이 사건은 보이는 것과 다릅니다."));
+    }
+
+    @Test
+    void hintMissingPuzzleReturns404() throws Exception {
+        when(service.hint(99L, 1)).thenThrow(new PuzzleNotFoundException(99L));
+        mockMvc.perform(post("/api/ai/99/hint/1"))
+            .andExpect(status().isNotFound());
+    }
 }

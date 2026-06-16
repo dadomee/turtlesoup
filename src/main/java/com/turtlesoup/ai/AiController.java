@@ -2,6 +2,7 @@ package com.turtlesoup.ai;
 
 import com.turtlesoup.ai.dto.AskRequest;
 import com.turtlesoup.ai.dto.AskResponse;
+import com.turtlesoup.ai.dto.HintResponse;
 import com.turtlesoup.puzzle.PuzzleNotFoundException;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -22,6 +23,11 @@ public class AiController {
     @PostMapping("/{puzzleId}/ask")
     public AskResponse ask(@PathVariable Long puzzleId, @Valid @RequestBody AskRequest request) {
         return new AskResponse(service.judge(puzzleId, request.question()));
+    }
+
+    @PostMapping("/{puzzleId}/hint/{n}")
+    public HintResponse hint(@PathVariable Long puzzleId, @PathVariable int n) {
+        return new HintResponse(n, service.hint(puzzleId, n));
     }
 
     @ResponseStatus(HttpStatus.NOT_FOUND)
