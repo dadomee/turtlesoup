@@ -31,7 +31,8 @@ class PuzzleControllerTest {
 
         mockMvc.perform(get("/api/puzzles"))
             .andExpect(status().isOk())
-            .andExpect(jsonPath("$[0].title").value("바다거북 스프"));
+            .andExpect(jsonPath("$[0].title").value("바다거북 스프"))
+            .andExpect(jsonPath("$[0].solution").doesNotExist());
     }
 
     @Test
@@ -41,7 +42,8 @@ class PuzzleControllerTest {
 
         mockMvc.perform(get("/api/puzzles/1"))
             .andExpect(status().isOk())
-            .andExpect(jsonPath("$.scenario").value("상황 텍스트"));
+            .andExpect(jsonPath("$.scenario").value("상황 텍스트"))
+            .andExpect(jsonPath("$.solution").doesNotExist());
     }
 
     @Test
@@ -58,6 +60,7 @@ class PuzzleControllerTest {
         when(service.getForPlay(99L)).thenThrow(new PuzzleNotFoundException(99L));
 
         mockMvc.perform(get("/api/puzzles/99"))
-            .andExpect(status().isNotFound());
+            .andExpect(status().isNotFound())
+            .andExpect(jsonPath("$.error").value("문제를 찾을 수 없습니다: 99"));
     }
 }

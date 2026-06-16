@@ -7,6 +7,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/puzzles")
@@ -35,6 +36,7 @@ public class PuzzleController {
 
     @ResponseStatus(HttpStatus.NOT_FOUND)
     @ExceptionHandler(PuzzleNotFoundException.class)
-    public void handleNotFound() {
+    public Map<String, String> handleNotFound(PuzzleNotFoundException ex) {
+        return Map.of("error", ex.getMessage());
     }
 }
