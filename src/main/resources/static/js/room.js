@@ -1,0 +1,203 @@
+const lobby = document.getElementById("lobby-view");
+const roomView = document.getElementById("room-view");
+
+let ws = null;
+let isHost = false;
+let myCode = null;
+
+const VERDICT = { YES: "예", NO: "아니오", IRRELEVANT: "상관없음", CORRECT: "정답!" };
+const VCLASS = { YES: "yes", NO: "no", IRRELEVANT: "irrelevant", CORRECT: "correct" };
+
+function me() {
+  return (typeof getNickname === "function" && getNickname()) || "익명";
+}
+
+async function loadPuzzleOptions() {
+  const res = await fetch("/api/puzzles");
+  if (!res.ok) return;
+  const puzzles = await res.json();
+  const sel = document.getElementById("puzzle-select");
+  puzzles.forEach(p => {
+    const o = document.createElement("option");
+    o.value = p.id;
+    o.textContent = `${p.title} [${p.difficulty}]`;
+    sel.appendChild(o);
+  });
+}
+
+document.querySelectorAll('input[name="src"]').forEach(r => {
+  r.addEventListener("change", () => {
+    const custom = document.querySelector('input[name="src"]:checked').value === "custom";
+    document.getElementById("custom-fields").classList.toggle("hidden", !custom);
+    document.getElementById("puzzle-select").disabled = custom;
+  });
+});
+
+async function createRoom() {
+  const src = document.querySelector('input[name="src"]:checked').value;
+  const body = { hostName: me() };
+  if (src === "existing") {
+    body.puzzleId = Number(document.getElementById("puzzle-select").value);
+  } else {
+    body.title = document.getElementById("custom-title").value.trim();
+    body.scenario = document.getElementById("custom-scenario").value.trim();
+    body.solution = document.getElementById("custom-solution").value.trim();
+    if (!body.scenario || !body.solution) { alert("상황과 정답을 입력하세요."); return; }
+  }
+  const res = await fetch("/api/rooms", {
+    method: "POST", headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body)
+  });
+  if (!res.ok) { alert("방 생성에 실패했습니다."); return; }
+  const data = await res.json();
+  isHost = true;
+  enterRoom(data.code, data.title, data.scenario, data.solution);
+}
+
+async function joinRoom() {
+  const code = document.getElementById("join-code").value.trim().toUpperCase();
+  if (!code) return;
+  const res = await fetch(`/api/rooms/${code}`);
+  if (!res.ok) { alert("그런 방이 없습니다. 코드를 확인하세요."); return; }
+  const info = await res.json();
+  isHost = (info.hostName === me());
+  enterRoom(info.code, info.title, info.scenario, null);
+}
+
+function enterRoom(code, title, scenario, solution) {
+  myCode = code;
+  document.getElementById("room-code-badge").textContent = "방 코드: " + code;
+  document.getElementById("room-title").textContent = title;
+  document.getElementById("room-scenario").textContent = scenario;
+  document.getElementById("room-log").textContent = "";
+
+  if (isHost && solution) {
+    document.getElementById("host-solution-text").textContent = solution;
+    document.getElementById("host-solution").classList.remove("hidden");
+  }
+  document.getElementById("host-controls").classList.toggle("hidden", !isHost);
+  document.getElementById("participant-composer").classList.toggle("hidden", isHost);
+
+  lobby.classList.add("hidden");
+  roomView.classList.remove("hidden");
+
+  const proto = location.protocol === "https:" ? "wss" : "ws";
+  ws = new WebSocket(`${proto}://${location.host}/ws/room/${code}`);
+  ws.onopen = () => ws.send(JSON.stringify({ type: "join", nickname: me() }));
+  ws.onmessage = (e) => handleEvent(JSON.parse(e.data));
+  ws.onclose = () => appendSystem("연결이 종료되었습니다.");
+}
+
+function handleEvent(ev) {
+  if (ev.type === "system") appendSystem(ev.text);
+  else if (ev.type === "question") appendMsg("me", ev.nickname, ev.text);
+  else if (ev.type === "answer") appendVerdict(ev.verdict);
+  else if (ev.type === "hint") appendHint(ev.text, ev.count);
+  else if (ev.type === "reveal") {
+    appendSystem("📖 정답이 공개되었습니다.");
+    appendSolution(ev.solution);
+    endGame();
+  }
+}
+
+function row(side, name, contentEl) {
+  const r = document.createElement("div"); r.className = "msg";
+  const av = document.createElement("div"); av.className = "msg-avatar " + side;
+  av.textContent = name.charAt(0).toUpperCase();
+  const body = document.createElement("div");
+  const nm = document.createElement("div"); nm.className = "msg-name"; nm.textContent = name;
+  body.append(nm, contentEl);
+  r.append(av, body);
+  const log = document.getElementById("room-log");
+  log.appendChild(r);
+  const c = document.querySelector(".content"); if (c) c.scrollTop = c.scrollHeight;
+}
+function textDiv(t) { const d = document.createElement("div"); d.className = "msg-text"; d.textContent = t; return d; }
+function appendMsg(side, name, text) { row(side, name, textDiv(text)); }
+function appendSystem(text) {
+  const p = document.createElement("p"); p.className = "muted"; p.style.textAlign = "center"; p.textContent = text;
+  document.getElementById("room-log").appendChild(p);
+}
+function appendVerdict(v) {
+  const pill = document.createElement("span");
+  pill.className = "verdict " + (VCLASS[v] || "unknown");
+  pill.textContent = VERDICT[v] || v;
+  row("bot", "출제자", pill);
+}
+function appendSolution(text) {
+  const box = document.createElement("div"); box.className = "msg-text";
+  box.style.background = "var(--info-bg)"; box.style.borderRadius = "8px";
+  box.style.padding = "10px 12px"; box.style.lineHeight = "1.7";
+  box.textContent = text;
+  row("bot", "출제자", box);
+}
+function appendHint(text, count) {
+  const badge = document.getElementById("hint-count");
+  if (badge) badge.textContent = count;
+  const box = document.createElement("div");
+  box.className = "msg-text";
+  const label = document.createElement("div");
+  label.style.fontWeight = "500";
+  label.style.marginBottom = "4px";
+  label.textContent = "💡 힌트 " + count + "/3";
+  const body = document.createElement("div");
+  body.style.background = "var(--warn-bg)";
+  body.style.color = "var(--warn)";
+  body.style.borderRadius = "8px";
+  body.style.padding = "10px 12px";
+  body.style.lineHeight = "1.7";
+  body.textContent = text;
+  box.append(label, body);
+  row("bot", "출제자 힌트", box);
+  if (count >= 3) {
+    const hs = document.getElementById("hint-send");
+    const hi = document.getElementById("hint-input");
+    if (hs) hs.disabled = true;
+    if (hi) hi.disabled = true;
+  }
+}
+function sendHint() {
+  const inp = document.getElementById("hint-input");
+  const t = inp.value.trim();
+  if (!t || !ws) return;
+  ws.send(JSON.stringify({ type: "hint", nickname: me(), text: t }));
+  inp.value = "";
+}
+function endGame() {
+  document.getElementById("room-input") && (document.getElementById("room-input").disabled = true);
+  document.querySelectorAll("#host-controls button").forEach(b => b.disabled = true);
+  const send = document.getElementById("room-send"); if (send) send.disabled = true;
+  const hs = document.getElementById("hint-send"); if (hs) hs.disabled = true;
+  const hi = document.getElementById("hint-input"); if (hi) hi.disabled = true;
+}
+
+function sendQuestion() {
+  const input = document.getElementById("room-input");
+  const t = input.value.trim();
+  if (!t || !ws) return;
+  ws.send(JSON.stringify({ type: "ask", nickname: me(), text: t }));
+  input.value = "";
+}
+function sendAnswer(verdict) {
+  if (ws) ws.send(JSON.stringify({ type: "answer", nickname: me(), verdict }));
+}
+function leaveRoom() {
+  if (ws) ws.close();
+  roomView.classList.add("hidden");
+  lobby.classList.remove("hidden");
+}
+
+document.getElementById("create-btn").addEventListener("click", createRoom);
+document.getElementById("join-btn").addEventListener("click", joinRoom);
+document.getElementById("room-send").addEventListener("click", sendQuestion);
+document.getElementById("room-input").addEventListener("keydown", e => { if (e.key === "Enter") sendQuestion(); });
+document.querySelectorAll("#host-controls .ans").forEach(b => {
+  b.addEventListener("click", () => sendAnswer(b.dataset.v));
+});
+document.getElementById("reveal-btn").addEventListener("click", () => {
+  if (ws) ws.send(JSON.stringify({ type: "reveal", nickname: me() }));
+});
+document.getElementById("hint-send").addEventListener("click", sendHint);
+document.getElementById("hint-input").addEventListener("keydown", e => { if (e.key === "Enter") sendHint(); });
+
+loadPuzzleOptions();
