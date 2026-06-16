@@ -1,5 +1,6 @@
 package com.turtlesoup.puzzle;
 
+import com.turtlesoup.puzzle.dto.PuzzleHint;
 import com.turtlesoup.puzzle.dto.PuzzlePlay;
 import com.turtlesoup.puzzle.dto.PuzzleSolution;
 import com.turtlesoup.puzzle.dto.PuzzleSummary;
@@ -26,6 +27,10 @@ public class PuzzleService {
 
     public PuzzleSolution getSolution(Long id) {
         return PuzzleSolution.from(find(id));
+    }
+
+    public PuzzleHint getHint(Long id, int n) {
+        return new PuzzleHint(n, find(id).getHint(n));
     }
 
     private Puzzle find(Long id) {

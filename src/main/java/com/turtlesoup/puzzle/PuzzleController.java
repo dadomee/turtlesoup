@@ -1,5 +1,6 @@
 package com.turtlesoup.puzzle;
 
+import com.turtlesoup.puzzle.dto.PuzzleHint;
 import com.turtlesoup.puzzle.dto.PuzzlePlay;
 import com.turtlesoup.puzzle.dto.PuzzleSolution;
 import com.turtlesoup.puzzle.dto.PuzzleSummary;
@@ -32,6 +33,11 @@ public class PuzzleController {
     @GetMapping("/{id}/solution")
     public PuzzleSolution solution(@PathVariable Long id) {
         return service.getSolution(id);
+    }
+
+    @GetMapping("/{id}/hint/{n}")
+    public PuzzleHint hint(@PathVariable Long id, @PathVariable int n) {
+        return service.getHint(id, n);
     }
 
     @ResponseStatus(HttpStatus.NOT_FOUND)

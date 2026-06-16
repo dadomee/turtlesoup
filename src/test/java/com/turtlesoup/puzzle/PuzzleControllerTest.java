@@ -1,5 +1,6 @@
 package com.turtlesoup.puzzle;
 
+import com.turtlesoup.puzzle.dto.PuzzleHint;
 import com.turtlesoup.puzzle.dto.PuzzlePlay;
 import com.turtlesoup.puzzle.dto.PuzzleSolution;
 import com.turtlesoup.puzzle.dto.PuzzleSummary;
@@ -62,5 +63,13 @@ class PuzzleControllerTest {
         mockMvc.perform(get("/api/puzzles/99"))
             .andExpect(status().isNotFound())
             .andExpect(jsonPath("$.error").value("문제를 찾을 수 없습니다: 99"));
+    }
+
+    @Test
+    void hintEndpointReturnsHint() throws Exception {
+        when(service.getHint(1L, 2)).thenReturn(new PuzzleHint(2, "두번째힌트"));
+        mockMvc.perform(get("/api/puzzles/1/hint/2"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.hint").value("두번째힌트"));
     }
 }

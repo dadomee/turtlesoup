@@ -1,5 +1,6 @@
 package com.turtlesoup.puzzle;
 
+import com.turtlesoup.puzzle.dto.PuzzleHint;
 import com.turtlesoup.puzzle.dto.PuzzlePlay;
 import com.turtlesoup.puzzle.dto.PuzzleSolution;
 import com.turtlesoup.puzzle.dto.PuzzleSummary;
@@ -63,5 +64,18 @@ class PuzzleServiceTest {
         PuzzleSolution result = service.getSolution(1L);
 
         assertThat(result.solution()).isEqualTo("정답 텍스트");
+    }
+
+    @Test
+    void getHintReturnsNthHint() {
+        Puzzle p = new Puzzle("t", "s", "sol", Difficulty.EASY, "고전", "힌트1", "힌트2", "힌트3");
+        when(repository.findById(1L)).thenReturn(java.util.Optional.of(p));
+        assertThat(service.getHint(1L, 2).hint()).isEqualTo("힌트2");
+    }
+
+    @Test
+    void getHintThrowsWhenMissing() {
+        when(repository.findById(9L)).thenReturn(java.util.Optional.empty());
+        assertThatThrownBy(() -> service.getHint(9L, 1)).isInstanceOf(PuzzleNotFoundException.class);
     }
 }
