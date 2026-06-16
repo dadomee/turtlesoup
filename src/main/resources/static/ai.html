@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>바다거북스프 — AI 출제자</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <h1>🐢 AI 출제자</h1>
+  <p><button onclick="location.href='/'" style="background:#888">← 모드 선택</button></p>
+
+  <div id="list-view">
+    <h2>문제 목록</h2>
+    <div id="puzzle-list"></div>
+  </div>
+
+  <div id="play-view" class="hidden">
+    <div class="card">
+      <h2 id="play-title"></h2>
+      <p class="muted" id="play-meta"></p>
+      <p id="play-scenario"></p>
+    </div>
+
+    <div class="card">
+      <p class="muted">예/아니오로 답할 수 있는 질문을 던져 진상을 추리하세요. 핵심을 맞히면 "정답!"이 나옵니다.</p>
+      <div id="chat-log"></div>
+      <div id="ask-row">
+        <input type="text" id="question-input" placeholder="예: 주인공이 죽었나요?">
+        <button id="ask-btn">질문</button>
+      </div>
+      <p class="muted">질문 수: <span id="q-count">0</span></p>
+    </div>
+
+    <p><button onclick="showList()" style="background:#888">← 목록으로</button></p>
+  </div>
+
+  <script src="/js/nickname.js"></script>
+  <script src="/js/ai.js"></script>
+</body>
+</html>
