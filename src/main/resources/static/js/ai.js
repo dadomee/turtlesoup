@@ -5,6 +5,7 @@ let currentPuzzleId = null;
 let questionCount = 0;
 let solved = false;
 let asking = false; // 요청 진행 중 중복 제출 방지
+let hintsUsed = 0;
 
 const VERDICT_LABEL = {
   YES: "예",
@@ -55,6 +56,9 @@ async function openPuzzle(id) {
   input.value = "";
   input.disabled = false;
   document.getElementById("ask-btn").disabled = false;
+  hintsUsed = 0;
+  document.getElementById("hint-n").textContent = "0";
+  document.getElementById("hint-btn").disabled = false;
 
   document.getElementById("play-title").textContent = p.title;
   document.getElementById("play-meta").textContent = `난이도: ${p.difficulty}`;
@@ -138,6 +142,7 @@ async function ask() {
     if (data.verdict === "CORRECT") {
       solved = true;
       input.disabled = true;
+      document.getElementById("hint-btn").disabled = true;
       appendBotText(`정답입니다! ${questionCount}번 만에 맞히셨어요. 🎉`);
       await revealSolution();
       recordSolve();
@@ -178,6 +183,43 @@ function appendBotSolution(text) {
   msgRow("bot", "추리비서 AI", "AI", box);
 }
 
+function appendBotHint(text, n) {
+  const box = document.createElement("div");
+  box.className = "msg-text";
+  const label = document.createElement("div");
+  label.style.fontWeight = "500";
+  label.style.marginBottom = "4px";
+  label.textContent = `💡 힌트 ${n}/3`;
+  const body = document.createElement("div");
+  body.style.background = "var(--warn-bg)";
+  body.style.color = "var(--warn)";
+  body.style.borderRadius = "8px";
+  body.style.padding = "10px 12px";
+  body.style.lineHeight = "1.7";
+  body.textContent = text;
+  box.append(label, body);
+  msgRow("bot", "추리비서 AI", "AI", box);
+}
+
+async function useHint() {
+  if (solved || hintsUsed >= 3) return;
+  const hintBtn = document.getElementById("hint-btn");
+  const next = hintsUsed + 1;
+  hintBtn.disabled = true;
+  try {
+    const res = await fetch(`/api/ai/${currentPuzzleId}/hint/${next}`, { method: "POST" });
+    if (!res.ok) { appendBotText("힌트를 가져오지 못했습니다. (Ollama가 켜져 있는지 확인하세요)"); return; }
+    const data = await res.json();
+    hintsUsed = next;
+    appendBotHint(data.hint, next);
+    document.getElementById("hint-n").textContent = String(hintsUsed);
+  } catch (e) {
+    appendBotText("힌트 요청 중 오류가 발생했습니다.");
+  } finally {
+    if (!solved && hintsUsed < 3) hintBtn.disabled = false;
+  }
+}
+
 async function recordSolve() {
   const nickname = meName();
   try {
@@ -198,6 +240,7 @@ function showList() {
 }
 
 document.getElementById("ask-btn").addEventListener("click", ask);
+document.getElementById("hint-btn").addEventListener("click", useHint);
 document.getElementById("question-input").addEventListener("keydown", e => {
   if (e.key === "Enter") ask();
 });
