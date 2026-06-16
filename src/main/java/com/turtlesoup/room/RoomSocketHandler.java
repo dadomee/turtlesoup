@@ -64,7 +64,7 @@ public class RoomSocketHandler extends TextWebSocketHandler {
             }
             case "reveal" -> {
                 String nick = str(msg.get("nickname"));
-                if (!room.isHost(nick)) return;
+                if (!room.isHost(nick) || room.isEnded()) return;
                 room.end();
                 broadcast(code, Map.of("type", "reveal",
                     "solution", room.getSolution(), "ended", true));
