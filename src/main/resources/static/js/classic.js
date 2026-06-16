@@ -56,6 +56,38 @@ async function openPuzzle(id) {
     revealBtn.classList.add("hidden");
   };
 
+  // 힌트 (문제마다 최대 3회)
+  let hintsUsed = 0;
+  const hintBtn = document.getElementById("hint-btn");
+  const hintN = document.getElementById("hint-n");
+  const hintList = document.getElementById("hint-list");
+  hintN.textContent = "0";
+  hintList.textContent = "";
+  hintBtn.disabled = false;
+  hintBtn.onclick = async () => {
+    if (hintsUsed >= 3) return;
+    const next = hintsUsed + 1;
+    const hr = await fetch(`/api/puzzles/${id}/hint/${next}`);
+    if (!hr.ok) { alert("힌트를 불러오지 못했습니다."); return; }
+    const hd = await hr.json();
+    if (!hd.hint) { alert("이 문제에는 더 이상 힌트가 없습니다."); hintBtn.disabled = true; return; }
+    hintsUsed = next;
+    const card = document.createElement("div");
+    card.className = "card";
+    card.style.background = "var(--warn-bg)";
+    card.style.color = "var(--warn)";
+    const b = document.createElement("b");
+    b.textContent = `💡 힌트 ${next}/3`;
+    const pp = document.createElement("p");
+    pp.style.margin = "4px 0 0";
+    pp.style.lineHeight = "1.7";
+    pp.textContent = hd.hint;
+    card.append(b, pp);
+    hintList.appendChild(card);
+    hintN.textContent = String(hintsUsed);
+    if (hintsUsed >= 3) hintBtn.disabled = true;
+  };
+
   listView.classList.add("hidden");
   playView.classList.remove("hidden");
 }
