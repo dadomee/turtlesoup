@@ -1,5 +1,17 @@
 spring:
   profiles:
     active: local
+  ai:
+    ollama:
+      base-url: http://localhost:11434
+      chat:
+        options:
+          model: qwen2.5:3b
+          temperature: 0.2
+          repeat-penalty: 1.1
+          num-predict: 200
+          keep-alive: 10m
+      init:
+        pull-model-strategy: never
 server:
   port: 8080
