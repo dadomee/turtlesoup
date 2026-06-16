@@ -17,8 +17,7 @@ class PuzzleRepositoryTest {
         Puzzle saved = repository.save(
             new Puzzle("제목", "상황", "정답", Difficulty.EASY, "고전"));
 
-        assertThat(repository.findById(saved.getId())).isPresent();
-        assertThat(repository.findById(saved.getId()).get().getScenario())
-            .isEqualTo("상황");
+        Puzzle found = repository.findById(saved.getId()).orElseThrow();
+        assertThat(found.getScenario()).isEqualTo("상황");
     }
 }
