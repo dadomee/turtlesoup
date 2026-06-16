@@ -47,4 +47,12 @@ class VerdictParserTest {
         assertThat(VerdictParser.parse("")).isEqualTo(Verdict.UNKNOWN);
         assertThat(VerdictParser.parse(null)).isEqualTo(Verdict.UNKNOWN);
     }
+
+    @Test
+    void compoundWordsDoNotFalsePositive() {
+        // 예/네/관계 가 합성어에 substring으로 들어가도 오탐하지 않는다
+        assertThat(VerdictParser.parse("예외적입니다")).isEqualTo(Verdict.UNKNOWN);
+        assertThat(VerdictParser.parse("네트워크")).isEqualTo(Verdict.UNKNOWN);
+        assertThat(VerdictParser.parse("인간관계입니다")).isEqualTo(Verdict.UNKNOWN);
+    }
 }
