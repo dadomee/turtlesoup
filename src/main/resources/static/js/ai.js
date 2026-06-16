@@ -4,6 +4,7 @@ const playView = document.getElementById("play-view");
 let currentPuzzleId = null;
 let questionCount = 0;
 let solved = false;
+let asking = false; // 요청 진행 중 중복 제출 방지
 
 const VERDICT_LABEL = {
   YES: "예 ✅",
@@ -73,43 +74,57 @@ function appendChat(who, text) {
 }
 
 async function ask() {
-  if (solved) return;
+  if (solved || asking) return;
   const input = document.getElementById("question-input");
+  const askBtn = document.getElementById("ask-btn");
   const q = input.value.trim();
   if (!q) return;
 
+  asking = true;
+  askBtn.disabled = true;
   appendChat("나", q);
   input.value = "";
   questionCount += 1;
   document.getElementById("q-count").textContent = String(questionCount);
 
-  const res = await fetch(`/api/ai/${currentPuzzleId}/ask`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ question: q })
-  });
-  if (!res.ok) {
-    appendChat("AI", "답변을 가져오지 못했습니다. (Ollama가 켜져 있는지 확인하세요)");
-    return;
-  }
-  const data = await res.json();
-  appendChat("AI", VERDICT_LABEL[data.verdict] || data.verdict);
+  try {
+    const res = await fetch(`/api/ai/${currentPuzzleId}/ask`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ question: q })
+    });
+    if (!res.ok) {
+      appendChat("AI", "답변을 가져오지 못했습니다. (Ollama가 켜져 있는지 확인하세요)");
+      return;
+    }
+    const data = await res.json();
+    appendChat("AI", VERDICT_LABEL[data.verdict] || data.verdict);
 
-  if (data.verdict === "CORRECT") {
-    solved = true;
-    document.getElementById("question-input").disabled = true;
-    document.getElementById("ask-btn").disabled = true;
-    recordSolve();
+    if (data.verdict === "CORRECT") {
+      solved = true;
+      input.disabled = true;
+      recordSolve();
+    }
+  } catch (e) {
+    appendChat("AI", "서버에 연결하지 못했습니다. 잠시 후 다시 시도해 주세요.");
+  } finally {
+    asking = false;
+    if (!solved) askBtn.disabled = false; // 정답 전이면 다시 질문 가능
   }
 }
 
 async function recordSolve() {
   const nickname = (typeof getNickname === "function" && getNickname()) || "익명";
-  await fetch(`/api/ai/${currentPuzzleId}/solve`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ nickname, questionCount })
-  });
+  try {
+    const res = await fetch(`/api/ai/${currentPuzzleId}/solve`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ nickname, questionCount })
+    });
+    if (!res.ok) console.warn("기록 저장 실패:", res.status);
+  } catch (e) {
+    console.warn("기록 저장 중 오류:", e);
+  }
 }
 
 function showList() {
