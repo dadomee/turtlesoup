@@ -1,0 +1,36 @@
+* { box-sizing: border-box; }
+body {
+  font-family: system-ui, "Apple SD Gothic Neo", sans-serif;
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 24px;
+  background: #f7f6f2;
+  color: #222;
+}
+h1 { font-size: 1.6rem; }
+button {
+  font-size: 1rem;
+  padding: 10px 16px;
+  border: none;
+  border-radius: 8px;
+  background: #2e7d6b;
+  color: #fff;
+  cursor: pointer;
+}
+button:hover { background: #275f53; }
+.card {
+  background: #fff;
+  border-radius: 12px;
+  padding: 16px;
+  margin: 12px 0;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+}
+.muted { color: #777; font-size: 0.9rem; }
+input[type=text] {
+  font-size: 1rem;
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  width: 60%;
+}
+.hidden { display: none; }

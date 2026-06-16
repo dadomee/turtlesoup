@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>바다거북스프</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <h1>🐢 바다거북스프</h1>
+
+  <div id="nickname-setup" class="card hidden">
+    <p>닉네임을 정하면 바로 시작할 수 있어요. (가입 없음)</p>
+    <input type="text" id="nickname-input" placeholder="닉네임" maxlength="20">
+    <button id="nickname-save">시작</button>
+  </div>
+
+  <div id="mode-select" class="card hidden">
+    <p><b id="hello"></b> 님, 모드를 골라주세요.</p>
+    <p><button onclick="location.href='/classic.html'">① 미리 만든 문제 풀기</button></p>
+    <p class="muted">② AI 출제자, ③ 멀티플레이는 곧 추가됩니다.</p>
+    <p><button onclick="changeNickname()" style="background:#888">닉네임 변경</button></p>
+  </div>
+
+  <script src="/js/nickname.js"></script>
+  <script>
+    const setup = document.getElementById("nickname-setup");
+    const select = document.getElementById("mode-select");
+
+    function render() {
+      const nick = getNickname();
+      if (nick) {
+        document.getElementById("hello").textContent = nick;
+        select.classList.remove("hidden");
+        setup.classList.add("hidden");
+      } else {
+        setup.classList.remove("hidden");
+        select.classList.add("hidden");
+      }
+    }
+
+    function changeNickname() {
+      localStorage.removeItem("turtlesoup.nickname");
+      render();
+    }
+
+    document.getElementById("nickname-save").addEventListener("click", () => {
+      const v = document.getElementById("nickname-input").value.trim();
+      if (v) { setNickname(v); render(); }
+    });
+
+    render();
+  </script>
+</body>
+</html>
