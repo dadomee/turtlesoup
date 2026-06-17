@@ -15,6 +15,7 @@
       <div class="rail-item"><span class="ic">📅</span>일정</div>
       <div class="rail-item"><span class="ic">📁</span>파일</div>
     </nav>
+
     <aside class="sidebar">
       <div class="ws-header">(주)성실상사</div>
       <div class="nav">
@@ -26,6 +27,7 @@
       </div>
       <div class="sidebar-foot"><span class="status-dot"></span> <span data-me-name>게스트</span> · 근무중</div>
     </aside>
+
     <div class="main">
       <header class="topbar">
         <span class="topbar-title"># 팀-라운지</span>
@@ -33,6 +35,7 @@
         <span class="topbar-spacer"></span>
         <span class="avatar" data-me-avatar>?</span>
       </header>
+
       <div class="content">
         <div class="content-narrow">
 
@@ -40,20 +43,8 @@
             <h1># 팀-라운지</h1>
             <div class="card">
               <h3>방 만들기 (출제자)</h3>
-              <p class="muted">문제를 골라 방을 열고, 친구에게 방 코드를 알려주세요.</p>
-              <div style="margin:10px 0;">
-                <label><input type="radio" name="src" value="existing" checked> 기존 문제에서 선택</label>
-                <select id="puzzle-select" style="margin-left:8px;"></select>
-              </div>
-              <div style="margin:10px 0;">
-                <label><input type="radio" name="src" value="custom"> 직접 출제</label>
-                <div id="custom-fields" class="hidden" style="margin-top:8px;">
-                  <input type="text" id="custom-title" placeholder="제목(선택)" style="margin-bottom:6px;">
-                  <textarea id="custom-scenario" placeholder="문제 상황(참가자에게 보여줄 내용)" rows="3" style="width:100%;margin-bottom:6px;"></textarea>
-                  <textarea id="custom-solution" placeholder="정답/해설(나만 봄)" rows="2" style="width:100%;"></textarea>
-                </div>
-              </div>
-              <button id="create-btn">방 만들기</button>
+              <p class="muted">방을 만든 뒤, 방 안에서 문제를 고르면 게임이 시작됩니다.</p>
+              <p style="margin-top:12px;"><button id="create-btn">방 만들기</button></p>
             </div>
             <div class="card">
               <h3>방 입장 (참가자)</h3>
@@ -67,13 +58,33 @@
           <div id="room-view" class="hidden">
             <p><button class="ghost" onclick="leaveRoom()">← 나가기</button>
                <span class="badge diff" id="room-code-badge"></span></p>
+
+            <div id="puzzle-picker" class="card hidden">
+              <h3>문제 고르기</h3>
+              <p class="muted">기존 문제에서 고르거나 직접 출제하세요. 고르면 참가자에게 상황이 공개됩니다.</p>
+              <div style="margin:12px 0;">
+                <label><input type="radio" name="src" value="existing" checked> 기존 문제에서 선택</label>
+                <select id="puzzle-select" style="margin-top:6px;"></select>
+              </div>
+              <div style="margin:12px 0;">
+                <label><input type="radio" name="src" value="custom"> 직접 출제</label>
+                <div id="custom-fields" class="hidden" style="margin-top:8px; display:flex; flex-direction:column; gap:6px;">
+                  <input type="text" id="custom-title" placeholder="제목 (선택)">
+                  <textarea id="custom-scenario" rows="3" placeholder="문제 상황 — 참가자에게 보여줄 내용"></textarea>
+                  <textarea id="custom-solution" rows="2" placeholder="정답/해설 — 나(출제자)만 봅니다"></textarea>
+                </div>
+              </div>
+              <button id="set-puzzle-btn">이 문제로 시작</button>
+            </div>
+
             <div class="card">
-              <h2 id="room-title"></h2>
+              <h2 id="room-title">대기 중…</h2>
               <p id="room-scenario" style="line-height:1.7;"></p>
               <div id="host-solution" class="hidden" style="margin-top:8px; background:var(--info-bg); border-radius:8px; padding:10px 12px;">
                 <b style="font-weight:500;">정답(나만 봄):</b> <span id="host-solution-text"></span>
               </div>
             </div>
+
             <div class="card">
               <div id="room-log" class="chat-log"></div>
 
@@ -93,7 +104,7 @@
                 </div>
                 <div style="margin-top:10px; display:flex; gap:8px;">
                   <input type="text" id="hint-input" placeholder="힌트를 입력해 참가자에게 공개">
-                  <button id="hint-send" style="white-space:nowrap;">힌트 주기 (<span id="hint-count">0</span>/3)</button>
+                  <button id="hint-send" style="white-space:nowrap;">💡 힌트 주기 (<span id="hint-count">0</span>/3)</button>
                 </div>
               </div>
             </div>
