@@ -74,6 +74,15 @@
               </div>
             </div>
 
+            <div class="card">
+              <h3>회사 이름 (위장용)</h3>
+              <p class="muted">사이드바에 보이는 워크스페이스 이름을 바꿔 더 자연스럽게 위장하세요.</p>
+              <div style="display:flex; gap:8px; margin-top:10px;">
+                <input type="text" id="company-input" maxlength="30" placeholder="(주)성실상사">
+                <button id="company-save" style="white-space:nowrap;">변경</button>
+              </div>
+            </div>
+
             <p style="margin-top:8px;"><button class="ghost" onclick="changeNickname()">이름 변경</button></p>
           </div>
 
@@ -83,6 +92,7 @@
   </div>
 
   <script src="/js/nickname.js"></script>
+  <script src="/js/workspace.js"></script>
   <script src="/js/shell.js"></script>
   <script src="/js/boss.js"></script>
   <script>
@@ -124,6 +134,14 @@
       b.addEventListener("click", () => { setTheme(b.dataset.themeVal); renderThemeButtons(); });
     });
     renderThemeButtons();
+
+    const companyInput = document.getElementById("company-input");
+    if (typeof getCompany === "function") companyInput.value = getCompany();
+    function saveCompany() {
+      if (typeof setCompany === "function") setCompany(companyInput.value);
+    }
+    document.getElementById("company-save").addEventListener("click", saveCompany);
+    companyInput.addEventListener("keydown", (e) => { if (e.key === "Enter") saveCompany(); });
 
     render();
   </script>
