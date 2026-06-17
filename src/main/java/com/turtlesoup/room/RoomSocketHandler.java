@@ -1,6 +1,8 @@
 package com.turtlesoup.room;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.turtlesoup.puzzle.Puzzle;
+import com.turtlesoup.puzzle.PuzzleRepository;
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.socket.TextMessage;
@@ -17,12 +19,13 @@ import java.util.concurrent.ConcurrentHashMap;
 public class RoomSocketHandler extends TextWebSocketHandler {
 
     private final RoomService rooms;
+    private final PuzzleRepository puzzles;
     private final ObjectMapper mapper = new ObjectMapper();
-    // code -> 세션 집합
     private final Map<String, Set<WebSocketSession>> sessions = new ConcurrentHashMap<>();
 
-    public RoomSocketHandler(RoomService rooms) {
+    public RoomSocketHandler(RoomService rooms, PuzzleRepository puzzles) {
         this.rooms = rooms;
+        this.puzzles = puzzles;
     }
 
     @Override
@@ -33,6 +36,7 @@ public class RoomSocketHandler extends TextWebSocketHandler {
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     protected void handleTextMessage(WebSocketSession session, TextMessage message) throws Exception {
         Map<String, Object> msg = mapper.readValue(message.getPayload(), Map.class);
         String type = str(msg.get("type"));
@@ -46,32 +50,64 @@ public class RoomSocketHandler extends TextWebSocketHandler {
                 session.getAttributes().put("nickname", nick);
                 room.addParticipant(nick);
                 broadcast(code, Map.of("type", "system",
-                    "text", nick + " 님이 입장했습니다.",
-                    "participants", room.participants()));
+                    "text", nick + " 님이 입장했습니다.", "participants", room.participants()));
+                if (room.hasPuzzle()) {
+                    sendTo(session, Map.of("type", "puzzle",
+                        "title", room.getTitle(), "scenario", room.getScenario()));
+                    if (room.isHost(nick)) {
+                        sendTo(session, Map.of("type", "solution", "solution", room.getSolution()));
+                    }
+                }
             }
-            case "ask" -> broadcast(code, Map.of("type", "question",
-                "nickname", str(msg.get("nickname")), "text", str(msg.get("text"))));
+            case "setPuzzle" -> {
+                String nick = str(msg.get("nickname"));
+                if (!room.isHost(nick) || room.hasPuzzle()) return;
+                String title;
+                String scenario;
+                String solution;
+                Object pid = msg.get("puzzleId");
+                if (pid != null) {
+                    long id = pid instanceof Number ? ((Number) pid).longValue() : Long.parseLong(pid.toString());
+                    Puzzle p = puzzles.findById(id).orElse(null);
+                    if (p == null) return;
+                    title = p.getTitle();
+                    scenario = p.getScenario();
+                    solution = p.getSolution();
+                } else {
+                    scenario = str(msg.get("scenario"));
+                    solution = str(msg.get("solution"));
+                    if (scenario.isBlank() || solution.isBlank()) return;
+                    String t = str(msg.get("title"));
+                    title = t.isBlank() ? "직접 출제 문제" : t;
+                }
+                room.setPuzzle(title, scenario, solution);
+                broadcast(code, Map.of("type", "puzzle", "title", title, "scenario", scenario));
+                sendToHost(room, code, Map.of("type", "solution", "solution", solution));
+            }
+            case "ask" -> {
+                if (!room.hasPuzzle()) return;
+                broadcast(code, Map.of("type", "question",
+                    "nickname", str(msg.get("nickname")), "text", str(msg.get("text"))));
+            }
             case "answer" -> {
                 String nick = str(msg.get("nickname"));
-                if (!room.isHost(nick) || room.isEnded()) return;
+                if (!room.isHost(nick) || room.isEnded() || !room.hasPuzzle()) return;
                 String verdict = str(msg.get("verdict"));
                 broadcast(code, Map.of("type", "answer", "verdict", verdict));
                 if ("CORRECT".equals(verdict)) {
                     room.end();
-                    broadcast(code, Map.of("type", "reveal",
-                        "solution", room.getSolution(), "ended", true));
+                    broadcast(code, Map.of("type", "reveal", "solution", room.getSolution(), "ended", true));
                 }
             }
             case "reveal" -> {
                 String nick = str(msg.get("nickname"));
-                if (!room.isHost(nick) || room.isEnded()) return;
+                if (!room.isHost(nick) || room.isEnded() || !room.hasPuzzle()) return;
                 room.end();
-                broadcast(code, Map.of("type", "reveal",
-                    "solution", room.getSolution(), "ended", true));
+                broadcast(code, Map.of("type", "reveal", "solution", room.getSolution(), "ended", true));
             }
             case "hint" -> {
                 String nick = str(msg.get("nickname"));
-                if (!room.isHost(nick) || room.isEnded() || !room.canHint()) return;
+                if (!room.isHost(nick) || room.isEnded() || !room.hasPuzzle() || !room.canHint()) return;
                 String text = str(msg.get("text"));
                 if (text.isBlank()) return;
                 int n = room.useHint();
@@ -98,8 +134,7 @@ public class RoomSocketHandler extends TextWebSocketHandler {
             if (nick != null) {
                 room.removeParticipant(nick);
                 broadcast(code, Map.of("type", "system",
-                    "text", nick + " 님이 퇴장했습니다.",
-                    "participants", room.participants()));
+                    "text", nick + " 님이 퇴장했습니다.", "participants", room.participants()));
             }
         });
     }
@@ -107,26 +142,40 @@ public class RoomSocketHandler extends TextWebSocketHandler {
     private void broadcast(String code, Map<String, Object> payload) {
         Set<WebSocketSession> set = sessions.get(code);
         if (set == null) return;
-        String json;
-        try {
-            json = mapper.writeValueAsString(payload);
-        } catch (Exception e) {
-            return;
-        }
+        String json = toJson(payload);
+        if (json == null) return;
+        for (WebSocketSession s : set) sendRaw(s, json);
+    }
+
+    private void sendToHost(Room room, String code, Map<String, Object> payload) {
+        Set<WebSocketSession> set = sessions.get(code);
+        if (set == null) return;
+        String json = toJson(payload);
+        if (json == null) return;
         for (WebSocketSession s : set) {
-            if (s.isOpen()) {
-                synchronized (s) {
-                    try {
-                        s.sendMessage(new TextMessage(json));
-                    } catch (IOException ignored) {
-                    }
-                }
+            if (room.getHostName().equals(s.getAttributes().get("nickname"))) sendRaw(s, json);
+        }
+    }
+
+    private void sendTo(WebSocketSession session, Map<String, Object> payload) {
+        String json = toJson(payload);
+        if (json != null) sendRaw(session, json);
+    }
+
+    private void sendRaw(WebSocketSession s, String json) {
+        if (s.isOpen()) {
+            synchronized (s) {
+                try { s.sendMessage(new TextMessage(json)); } catch (IOException ignored) { }
             }
         }
     }
 
+    private String toJson(Map<String, Object> payload) {
+        try { return mapper.writeValueAsString(payload); } catch (Exception e) { return null; }
+    }
+
     private String codeFrom(URI uri) {
-        String path = uri.getPath();              // /ws/room/AB12
+        String path = uri.getPath();
         return path.substring(path.lastIndexOf('/') + 1).toUpperCase();
     }
 
