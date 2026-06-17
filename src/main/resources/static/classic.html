@@ -7,7 +7,7 @@
   <link rel="stylesheet" href="/css/style.css">
   <script src="/js/theme.js"></script>
 </head>
-<body>
+<body class="mode-classic">
   <div class="app">
     <nav class="rail" aria-label="앱">
       <div class="rail-item active"><span class="ic">💬</span>채팅</div>
@@ -40,8 +40,13 @@
         <div class="content-narrow">
 
           <div id="list-view">
-            <h1># 문제-보관함</h1>
-            <p class="muted" style="margin-bottom:16px;">보관된 추리 문제 목록입니다. 하나를 열어 혼자 추리한 뒤 정답을 확인하세요.</p>
+            <div class="mode-hero">
+              <span class="mh-icon">📁</span>
+              <div>
+                <div class="mh-title">문제 보관함</div>
+                <div class="mh-desc">미리 정리된 추리 문제를 혼자 풀고, 힌트와 정답으로 확인하세요.</div>
+              </div>
+            </div>
             <div id="puzzle-list"></div>
           </div>
 

@@ -2,6 +2,7 @@
 :root, [data-theme="teams"] {
   --accent: #4f52c9;        /* 팀즈풍 블루-바이올렛 */
   --accent-dark: #3b3e9e;
+  --mode: var(--accent);    /* 모드별 강조색 (기본=테마 accent, 페이지에서 덮어씀) */
   --rail: #2f327a;          /* 좌측 아이콘 레일(진한 블루) */
   --page: #f0f1f6;
   --surface: #ffffff;
@@ -77,7 +78,7 @@ body {
 
 .main { flex: 1; min-width: 0; display: flex; flex-direction: column; }
 .topbar {
-  height: 48px; flex-shrink: 0; background: var(--accent); color: #fff;
+  height: 48px; flex-shrink: 0; background: var(--mode); color: #fff;
   display: flex; align-items: center; gap: 12px; padding: 0 16px;
 }
 .topbar-title { font-weight: 500; font-size: 14px; }
@@ -93,6 +94,19 @@ body {
 
 .content { flex: 1; overflow-y: auto; padding: 20px 24px; }
 .content-narrow { max-width: 760px; margin: 0 auto; }
+
+/* 모드별 강조색 (보관함 vs AI 구분) */
+.mode-classic { --mode: #1f8a70; } /* 보관함 = 청록 */
+.mode-ai { --mode: #c85a2b; }      /* AI = 따뜻한 주황 */
+.mode-hero {
+  display: flex; align-items: center; gap: 14px;
+  background: var(--surface); border: 1px solid var(--border);
+  border-left: 5px solid var(--mode); border-radius: 10px;
+  padding: 14px 18px; margin-bottom: 18px;
+}
+.mode-hero .mh-icon { font-size: 30px; line-height: 1; }
+.mode-hero .mh-title { font-weight: 500; font-size: 16px; color: var(--mode); }
+.mode-hero .mh-desc { color: var(--muted); font-size: 13px; margin-top: 3px; }
 
 /* ===== 공통 요소 ===== */
 h1 { font-size: 18px; font-weight: 500; margin: 0 0 14px; }
@@ -123,6 +137,15 @@ input[type=text] {
   color: var(--text); width: 100%;
 }
 input[type=text]:focus { outline: none; border-color: var(--accent); }
+
+select, textarea {
+  font-size: 14px; font-family: inherit; padding: 9px 12px;
+  border: 1px solid var(--border); border-radius: 8px;
+  background: var(--surface); color: var(--text); width: 100%;
+}
+select:focus, textarea:focus { outline: none; border-color: var(--accent); }
+textarea { line-height: 1.6; resize: vertical; }
+select { cursor: pointer; }
 
 .badge { display: inline-block; padding: 2px 9px; border-radius: 12px; font-size: 11px; }
 .badge.diff { background: var(--info-bg); color: var(--accent-dark); }

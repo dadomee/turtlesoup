@@ -7,7 +7,7 @@
   <link rel="stylesheet" href="/css/style.css">
   <script src="/js/theme.js"></script>
 </head>
-<body>
+<body class="mode-ai">
   <div class="app">
     <nav class="rail" aria-label="앱">
       <div class="rail-item active"><span class="ic">💬</span>채팅</div>
@@ -40,8 +40,13 @@
         <div class="content-narrow">
 
           <div id="list-view">
-            <h1>@ 추리비서 AI</h1>
-            <p class="muted" style="margin-bottom:16px;">대화할 문제를 선택하세요. 예/아니오로 답할 수 있는 질문을 던지면 비서가 답해 줍니다.</p>
+            <div class="mode-hero">
+              <span class="mh-icon">🤖</span>
+              <div>
+                <div class="mh-title">추리비서 AI</div>
+                <div class="mh-desc">자유롭게 질문하면 예·아니오로 답하는 봇과 대화하며 추리하세요.</div>
+              </div>
+            </div>
             <div id="puzzle-list"></div>
           </div>
 
