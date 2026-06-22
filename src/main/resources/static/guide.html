@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>📖 게임 방법</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <script src="/js/theme.js"></script>
+</head>
+<body>
+  <div class="app">
+    <nav class="rail" aria-label="앱">
+      <div class="rail-item active"><span class="ic">💬</span>채팅</div>
+      <div class="rail-item"><span class="ic">👥</span>팀</div>
+      <div class="rail-item"><span class="ic">📅</span>일정</div>
+      <div class="rail-item"><span class="ic">📁</span>파일</div>
+    </nav>
+
+    <aside class="sidebar">
+      <div class="ws-header">(주)성실상사</div>
+      <div class="nav">
+        <span class="nav-label">워크스페이스</span>
+        <a class="nav-item" href="/"># 홈</a>
+        <a class="nav-item active" href="/guide.html">📖 게임 방법</a>
+        <a class="nav-item" href="/classic.html"># 문제-보관함</a>
+        <a class="nav-item" href="/ai.html">@ 추리비서 AI</a>
+        <a class="nav-item" href="/room.html"># 팀-라운지</a>
+      </div>
+      <div class="sidebar-foot"><span class="status-dot"></span> <span data-me-name>게스트</span> · 근무중</div>
+    </aside>
+
+    <div class="main">
+      <header class="topbar">
+        <span class="topbar-title">📖 게임 방법</span>
+        <span class="topbar-search">메시지, 파일, 사람 검색</span>
+        <span class="topbar-spacer"></span>
+        <span class="avatar" data-me-avatar>?</span>
+      </header>
+
+      <div class="content">
+        <div class="content-narrow">
+          <h1>🐢 바다거북스프 게임 방법</h1>
+
+          <div class="card">
+            <h3>바다거북스프란?</h3>
+            <p class="muted" style="line-height:1.8;">출제자가 기묘한 <b style="color:var(--text);font-weight:500;">상황 하나</b>만 던지고, 그 뒤에 숨은 이야기를 추리로 알아내는 <b style="color:var(--text);font-weight:500;">수평적 사고 추리 게임</b>이에요. 이름은 "식당에서 바다거북 스프를 한 입 먹은 남자가 집에 돌아가 스스로 목숨을 끊었다 — 왜?"라는 대표 문제에서 유래했어요.</p>
+          </div>
+
+          <div class="card">
+            <h3>기본 규칙</h3>
+            <p style="line-height:1.9;">
+              1. 출제자는 수수께끼 같은 <b style="font-weight:500;">상황</b>만 보여줍니다.<br>
+              2. 참가자는 <b style="font-weight:500;">예/아니오로 답할 수 있는 질문</b>을 던져요. <span class="muted">(예: "주인공이 죽었나요?")</span><br>
+              3. 출제자(또는 AI)는 <b style="font-weight:500;">예 · 아니오 · 상관없음</b> 으로만 답해요.<br>
+              4. 질문을 좁혀 사건의 <b style="font-weight:500;">전체 진상</b>을 맞히면 <b style="font-weight:500;">정답! 🎉</b>
+            </p>
+          </div>
+
+          <div class="card">
+            <h3>3가지 모드</h3>
+            <p style="line-height:1.9;">
+              <b style="font-weight:500;">📁 문제-보관함</b> — 미리 준비된 문제를 혼자 추리하고 "정답 보기"로 확인<br>
+              <b style="font-weight:500;">🤖 추리비서 AI</b> — AI가 출제자가 되어 질문에 답해줘요 (혼자서도 가능)<br>
+              <b style="font-weight:500;"># 팀-라운지</b> — 친구가 출제자가 되는 실시간 멀티플레이 (방 코드로 입장)
+            </p>
+          </div>
+
+          <div class="card">
+            <h3>힌트 &amp; 정답</h3>
+            <p class="muted" style="line-height:1.8;">막히면 <b style="color:var(--text);font-weight:500;">힌트를 최대 3번</b>까지 볼 수 있어요 (뒤로 갈수록 구체적이지만 정답을 바로 알려주진 않아요). 진상을 자기 말로 설명하면 "정답!"이 뜹니다.</p>
+          </div>
+
+          <div class="card" style="border-left:5px solid var(--accent);">
+            <h3>🤫 업무 중 꿀팁</h3>
+            <p class="muted" style="line-height:1.8;">백틱 <b style="color:var(--text);font-weight:500;">`</b> 키를 누르면 즉시 가짜 업무 화면(Outlook 받은편지함)으로 전환돼요. 상사가 다가오면 한 방! 다시 누르면(또는 Esc) 게임으로 복귀합니다.</p>
+          </div>
+
+          <p style="margin-top:8px;"><button onclick="location.href='/'">홈으로</button></p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="/js/nickname.js"></script>
+  <script src="/js/workspace.js"></script>
+  <script src="/js/shell.js"></script>
+  <script src="/js/boss.js"></script>
+</body>
+</html>

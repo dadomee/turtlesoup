@@ -4,7 +4,8 @@
   function init() {
     var nick = (typeof getNickname === "function" && getNickname()) || null;
     var path = location.pathname;
-    var isHome = path === "/" || path === "/index.html" || path.endsWith("/index.html");
+    // 홈과 게임 방법 페이지는 닉네임 없이도 볼 수 있다
+    var isHome = path === "/" || path === "/index.html" || path.endsWith("/index.html") || path.endsWith("/guide.html");
 
     if (!nick && !isHome) {
       location.href = "/";
