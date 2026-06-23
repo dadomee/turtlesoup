@@ -6,10 +6,10 @@ spring:
       base-url: http://localhost:11434
       chat:
         options:
-          model: qwen2.5:3b
+          model: qwen2.5:7b
           temperature: 0.2
           repeat-penalty: 1.1
-          num-predict: 200
+          num-predict: 300
           keep-alive: 10m
       init:
         pull-model-strategy: never
