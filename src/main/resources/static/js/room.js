@@ -220,11 +220,14 @@ function appendHint(text, count) {
       const el = document.getElementById(id);
       if (el) el.disabled = true;
     });
+  } else {
+    const ab = document.getElementById("ai-hint-btn"); // 응답 왔으니 다음 힌트 위해 다시 활성화
+    if (ab) ab.disabled = false;
   }
 }
 
 function endGame() {
-  ["room-input", "room-send", "hint-input", "hint-send", "ai-hint-btn"].forEach(id => {
+  ["room-input", "room-send", "hint-input", "hint-send", "ai-hint-btn", "ai-reveal-btn"].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.disabled = true;
   });
@@ -281,8 +284,16 @@ document.getElementById("reveal-btn").addEventListener("click", () => {
 });
 document.getElementById("hint-send").addEventListener("click", sendHint);
 document.getElementById("hint-input").addEventListener("keydown", e => { if (e.key === "Enter" && !e.isComposing) sendHint(); });
-document.getElementById("ai-hint-btn").addEventListener("click", () => {
-  if (ws) ws.send(JSON.stringify({ type: "hint", nickname: me() }));
+document.getElementById("ai-hint-btn").addEventListener("click", (e) => {
+  const btn = e.currentTarget;
+  if (!ws || btn.disabled) return;
+  btn.disabled = true; // 응답(힌트)이 올 때까지 잠금 — 연타·낭비 방지, AI가 느려도 피드백
+  ws.send(JSON.stringify({ type: "hint", nickname: me() }));
+});
+document.getElementById("ai-reveal-btn").addEventListener("click", () => {
+  if (ws && confirm("정답을 공개하면 게임이 끝나요. 모두에게 공개할까요?")) {
+    ws.send(JSON.stringify({ type: "reveal", nickname: me() }));
+  }
 });
 
 loadPuzzleOptions();
