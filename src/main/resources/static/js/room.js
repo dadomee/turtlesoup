@@ -110,7 +110,8 @@ function handleEvent(ev) {
   if (ev.type === "system") appendSystem(ev.text);
   else if (ev.type === "puzzle") onPuzzle(ev.title, ev.scenario);
   else if (ev.type === "solution") showHostSolution(ev.solution);
-  else if (ev.type === "question") appendMsg("me", ev.nickname, ev.text);
+  else if (ev.type === "chat") appendMsg("me", ev.nickname, ev.text);
+  else if (ev.type === "question") appendMsg("me", ev.nickname, "❓ " + ev.text);
   else if (ev.type === "answer") appendVerdict(ev.verdict);
   else if (ev.type === "hint") appendHint(ev.text, ev.count);
   else if (ev.type === "reveal") {
@@ -132,6 +133,8 @@ function onPuzzle(title, scenario) {
   } else if (isHost) {
     document.getElementById("host-controls").classList.remove("hidden");
   }
+  const who = isAiRoom ? "AI" : "출제자";
+  appendSystem(`💬 자유롭게 대화하세요. ${who}에게 예/아니오 질문을 하려면 "/질문 사람이 죽었나요?" 처럼 입력하세요.`);
 }
 
 function showHostSolution(solution) {
@@ -228,11 +231,20 @@ function endGame() {
   document.querySelectorAll("#host-controls button").forEach(b => b.disabled = true);
 }
 
+const ASK_PREFIX = "/질문";
 function sendQuestion() {
   const input = document.getElementById("room-input");
-  const t = input.value.trim();
-  if (!t || !ws) return;
-  ws.send(JSON.stringify({ type: "ask", nickname: me(), text: t }));
+  const raw = input.value.trim();
+  if (!raw || !ws) return;
+  if (raw.startsWith(ASK_PREFIX)) {
+    // "/질문 ..." → AI/출제자에게 묻기 (판정 대상)
+    const q = raw.slice(ASK_PREFIX.length).trim();
+    if (!q) return; // "/질문"만 입력하면 무시
+    ws.send(JSON.stringify({ type: "ask", nickname: me(), text: q }));
+  } else {
+    // 그냥 입력 → 잡담 (판정 안 함)
+    ws.send(JSON.stringify({ type: "chat", nickname: me(), text: raw }));
+  }
   input.value = "";
 }
 

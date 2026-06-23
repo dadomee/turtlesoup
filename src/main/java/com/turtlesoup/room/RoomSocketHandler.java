@@ -91,6 +91,12 @@ public class RoomSocketHandler extends TextWebSocketHandler {
                 broadcast(code, Map.of("type", "puzzle", "title", title, "scenario", scenario));
                 sendToHost(room, code, Map.of("type", "solution", "solution", solution));
             }
+            case "chat" -> {
+                String text = str(msg.get("text"));
+                if (text.isBlank()) return;
+                broadcast(code, Map.of("type", "chat",
+                    "nickname", str(msg.get("nickname")), "text", text));
+            }
             case "ask" -> {
                 if (!room.hasPuzzle()) return;
                 broadcast(code, Map.of("type", "question",
