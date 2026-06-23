@@ -12,7 +12,7 @@ const VERDICT_LABEL = {
   NO: "아니오",
   IRRELEVANT: "상관없음",
   CORRECT: "정답!",
-  UNKNOWN: "잘 모르겠어요 — 다르게 물어봐 주세요"
+  UNKNOWN: "🤔 질문이 모호해요 — 더 구체적으로 물어봐 주세요"
 };
 
 function meName() {

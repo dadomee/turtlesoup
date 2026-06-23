@@ -6,8 +6,8 @@ let isHost = false;
 let isAiRoom = false;
 let myCode = null;
 
-const VERDICT = { YES: "예", NO: "아니오", IRRELEVANT: "상관없음", CORRECT: "정답!" };
-const VCLASS = { YES: "yes", NO: "no", IRRELEVANT: "irrelevant", CORRECT: "correct" };
+const VERDICT = { YES: "예", NO: "아니오", IRRELEVANT: "상관없음", CORRECT: "정답!", UNKNOWN: "🤔 모호한 질문 — 더 구체적으로!" };
+const VCLASS = { YES: "yes", NO: "no", IRRELEVANT: "irrelevant", CORRECT: "correct", UNKNOWN: "unknown" };
 
 function me() {
   return (typeof getNickname === "function" && getNickname()) || "익명";
