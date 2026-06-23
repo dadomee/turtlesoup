@@ -3,6 +3,7 @@ const roomView = document.getElementById("room-view");
 
 let ws = null;
 let isHost = false;
+let isAiRoom = false;
 let myCode = null;
 
 const VERDICT = { YES: "예", NO: "아니오", IRRELEVANT: "상관없음", CORRECT: "정답!" };
@@ -11,6 +12,8 @@ const VCLASS = { YES: "yes", NO: "no", IRRELEVANT: "irrelevant", CORRECT: "corre
 function me() {
   return (typeof getNickname === "function" && getNickname()) || "익명";
 }
+
+function judgeName() { return isAiRoom ? "추리비서 AI" : "출제자"; }
 
 async function loadPuzzleOptions() {
   const res = await fetch("/api/puzzles");
@@ -34,15 +37,16 @@ document.querySelectorAll('input[name="src"]').forEach(r => {
   });
 });
 
-async function createRoom() {
+async function createRoom(aiHosted) {
   const res = await fetch("/api/rooms", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ hostName: me() })
+    body: JSON.stringify({ hostName: me(), aiHosted: !!aiHosted })
   });
   if (!res.ok) { alert("방 생성에 실패했습니다."); return; }
   const data = await res.json();
   isHost = true;
+  isAiRoom = !!aiHosted;
   enterRoom(data.code);
 }
 
@@ -53,6 +57,7 @@ async function joinRoom() {
   if (!res.ok) { alert("그런 방이 없습니다. 코드를 확인하세요."); return; }
   const info = await res.json();
   isHost = (info.hostName === me());
+  isAiRoom = !!info.aiHosted;
   enterRoom(info.code);
 }
 
@@ -63,14 +68,17 @@ function enterRoom(code) {
   document.getElementById("host-solution").classList.add("hidden");
   document.getElementById("participant-composer").classList.add("hidden");
   document.getElementById("host-controls").classList.add("hidden");
+  document.getElementById("ai-hint-bar").classList.add("hidden");
+  document.getElementById("puzzle-picker").classList.add("hidden");
   document.getElementById("room-title").textContent = "대기 중…";
 
-  if (isHost) {
+  if (isAiRoom) {
+    document.getElementById("room-scenario").textContent = "🤖 AI가 문제를 준비하고 있어요…";
+  } else if (isHost) {
     document.getElementById("room-scenario").textContent = "문제를 고르면 게임이 시작됩니다.";
     document.getElementById("puzzle-picker").classList.remove("hidden");
   } else {
     document.getElementById("room-scenario").textContent = "출제자가 문제를 고르는 중입니다…";
-    document.getElementById("puzzle-picker").classList.add("hidden");
   }
 
   lobby.classList.add("hidden");
@@ -116,9 +124,12 @@ function onPuzzle(title, scenario) {
   document.getElementById("room-title").textContent = title;
   document.getElementById("room-scenario").textContent = scenario;
   document.getElementById("puzzle-picker").classList.add("hidden");
-  // 메시지(채팅) 입력은 방장·참가자 모두 사용. 방장은 추가로 답변/힌트 컨트롤도 노출.
+  // 메시지(채팅) 입력은 모두 사용
   document.getElementById("participant-composer").classList.remove("hidden");
-  if (isHost) {
+  if (isAiRoom) {
+    // AI 방: 모두 동등한 게스트 + 공유 힌트 버튼 (출제자 컨트롤 없음)
+    document.getElementById("ai-hint-bar").classList.remove("hidden");
+  } else if (isHost) {
     document.getElementById("host-controls").classList.remove("hidden");
   }
 }
@@ -167,7 +178,7 @@ function appendVerdict(v) {
   const pill = document.createElement("span");
   pill.className = "verdict " + (VCLASS[v] || "unknown");
   pill.textContent = VERDICT[v] || v;
-  row("bot", "출제자", pill);
+  row("bot", judgeName(), pill);
 }
 
 function appendSolution(text) {
@@ -178,12 +189,14 @@ function appendSolution(text) {
   box.style.padding = "10px 12px";
   box.style.lineHeight = "1.7";
   box.textContent = text;
-  row("bot", "출제자", box);
+  row("bot", judgeName(), box);
 }
 
 function appendHint(text, count) {
-  const badge = document.getElementById("hint-count");
-  if (badge) badge.textContent = count;
+  ["hint-count", "ai-hint-count"].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = count;
+  });
   const box = document.createElement("div");
   box.className = "msg-text";
   const label = document.createElement("div");
@@ -198,20 +211,21 @@ function appendHint(text, count) {
   body.style.lineHeight = "1.7";
   body.textContent = text;
   box.append(label, body);
-  row("bot", "출제자 힌트", box);
+  row("bot", judgeName() + " 힌트", box);
   if (count >= 3) {
-    const hs = document.getElementById("hint-send");
-    const hi = document.getElementById("hint-input");
-    if (hs) hs.disabled = true;
-    if (hi) hi.disabled = true;
+    ["hint-send", "hint-input", "ai-hint-btn"].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.disabled = true;
+    });
   }
 }
 
 function endGame() {
-  const ri = document.getElementById("room-input"); if (ri) ri.disabled = true;
-  const rs = document.getElementById("room-send"); if (rs) rs.disabled = true;
+  ["room-input", "room-send", "hint-input", "hint-send", "ai-hint-btn"].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.disabled = true;
+  });
   document.querySelectorAll("#host-controls button").forEach(b => b.disabled = true);
-  const hi = document.getElementById("hint-input"); if (hi) hi.disabled = true;
 }
 
 function sendQuestion() {
@@ -240,7 +254,8 @@ function leaveRoom() {
   lobby.classList.remove("hidden");
 }
 
-document.getElementById("create-btn").addEventListener("click", createRoom);
+document.getElementById("create-human-btn").addEventListener("click", () => createRoom(false));
+document.getElementById("create-ai-btn").addEventListener("click", () => createRoom(true));
 document.getElementById("join-btn").addEventListener("click", joinRoom);
 document.getElementById("join-code").addEventListener("keydown", e => { if (e.key === "Enter") joinRoom(); });
 document.getElementById("set-puzzle-btn").addEventListener("click", setPuzzle);
@@ -254,5 +269,8 @@ document.getElementById("reveal-btn").addEventListener("click", () => {
 });
 document.getElementById("hint-send").addEventListener("click", sendHint);
 document.getElementById("hint-input").addEventListener("keydown", e => { if (e.key === "Enter") sendHint(); });
+document.getElementById("ai-hint-btn").addEventListener("click", () => {
+  if (ws) ws.send(JSON.stringify({ type: "hint", nickname: me() }));
+});
 
 loadPuzzleOptions();

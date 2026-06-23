@@ -43,9 +43,12 @@
           <div id="lobby-view">
             <h1># 팀-라운지</h1>
             <div class="card">
-              <h3>방 만들기 (출제자)</h3>
-              <p class="muted">방을 만든 뒤, 방 안에서 문제를 고르면 게임이 시작됩니다.</p>
-              <p style="margin-top:12px;"><button id="create-btn">방 만들기</button></p>
+              <h3>방 만들기</h3>
+              <p class="muted">출제자를 고르세요. <b style="color:var(--text);font-weight:500;">AI 출제</b>는 랜덤 문제로 <b style="color:var(--text);font-weight:500;">다 같이</b> 추리해요(아무도 정답을 미리 못 봐요).</p>
+              <div style="display:flex; gap:8px; margin-top:12px; flex-wrap:wrap;">
+                <button id="create-human-btn">🧑 사람이 출제</button>
+                <button id="create-ai-btn">🤖 AI가 출제 (다같이)</button>
+              </div>
             </div>
             <div class="card">
               <h3>방 입장 (참가자)</h3>
@@ -92,6 +95,10 @@
               <div id="participant-composer" class="composer hidden">
                 <input type="text" id="room-input" placeholder="메시지 입력 — 참가자는 예/아니오로 답할 수 있는 질문을">
                 <button id="room-send">전송</button>
+              </div>
+
+              <div id="ai-hint-bar" class="hidden" style="margin-top:10px;">
+                <button id="ai-hint-btn" class="ghost">💡 힌트 요청 (<span id="ai-hint-count">0</span>/3)</button>
               </div>
 
               <div id="host-controls" class="hidden" style="margin-top:12px;">
