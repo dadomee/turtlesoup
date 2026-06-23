@@ -242,7 +242,7 @@ function showList() {
 document.getElementById("ask-btn").addEventListener("click", ask);
 document.getElementById("hint-btn").addEventListener("click", useHint);
 document.getElementById("question-input").addEventListener("keydown", e => {
-  if (e.key === "Enter") ask();
+  if (e.key === "Enter" && !e.isComposing) ask();
 });
 
 loadList();

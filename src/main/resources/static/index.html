@@ -126,7 +126,7 @@
       if (v) { setNickname(v); location.reload(); }
     });
     document.getElementById("nickname-input").addEventListener("keydown", (e) => {
-      if (e.key === "Enter") document.getElementById("nickname-save").click();
+      if (e.key === "Enter" && !e.isComposing) document.getElementById("nickname-save").click();
     });
 
     function renderThemeButtons() {
@@ -146,7 +146,7 @@
       if (typeof setCompany === "function") setCompany(companyInput.value);
     }
     document.getElementById("company-save").addEventListener("click", saveCompany);
-    companyInput.addEventListener("keydown", (e) => { if (e.key === "Enter") saveCompany(); });
+    companyInput.addEventListener("keydown", (e) => { if (e.key === "Enter" && !e.isComposing) saveCompany(); });
 
     render();
   </script>

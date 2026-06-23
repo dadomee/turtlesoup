@@ -257,10 +257,10 @@ function leaveRoom() {
 document.getElementById("create-human-btn").addEventListener("click", () => createRoom(false));
 document.getElementById("create-ai-btn").addEventListener("click", () => createRoom(true));
 document.getElementById("join-btn").addEventListener("click", joinRoom);
-document.getElementById("join-code").addEventListener("keydown", e => { if (e.key === "Enter") joinRoom(); });
+document.getElementById("join-code").addEventListener("keydown", e => { if (e.key === "Enter" && !e.isComposing) joinRoom(); });
 document.getElementById("set-puzzle-btn").addEventListener("click", setPuzzle);
 document.getElementById("room-send").addEventListener("click", sendQuestion);
-document.getElementById("room-input").addEventListener("keydown", e => { if (e.key === "Enter") sendQuestion(); });
+document.getElementById("room-input").addEventListener("keydown", e => { if (e.key === "Enter" && !e.isComposing) sendQuestion(); });
 document.querySelectorAll("#host-controls .ans").forEach(b => {
   b.addEventListener("click", () => sendAnswer(b.dataset.v));
 });
@@ -268,7 +268,7 @@ document.getElementById("reveal-btn").addEventListener("click", () => {
   if (ws) ws.send(JSON.stringify({ type: "reveal", nickname: me() }));
 });
 document.getElementById("hint-send").addEventListener("click", sendHint);
-document.getElementById("hint-input").addEventListener("keydown", e => { if (e.key === "Enter") sendHint(); });
+document.getElementById("hint-input").addEventListener("keydown", e => { if (e.key === "Enter" && !e.isComposing) sendHint(); });
 document.getElementById("ai-hint-btn").addEventListener("click", () => {
   if (ws) ws.send(JSON.stringify({ type: "hint", nickname: me() }));
 });
