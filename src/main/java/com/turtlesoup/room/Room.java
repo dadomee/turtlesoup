@@ -15,6 +15,7 @@ public class Room {
     private String solution;
     private volatile boolean ended;
     private volatile int hintsUsed;
+    private boolean aiHosted;
     private final Set<String> participants = Collections.synchronizedSet(new LinkedHashSet<>());
 
     public Room(String code, String hostName) {
@@ -38,6 +39,9 @@ public class Room {
     public boolean isEnded() { return ended; }
     public void end() { this.ended = true; }
     public boolean isHost(String name) { return hostName.equals(name); }
+
+    public boolean isAiHosted() { return aiHosted; }
+    public void setAiHosted(boolean v) { this.aiHosted = v; }
 
     public int getHintsUsed() { return hintsUsed; }
     public boolean canHint() { return hintsUsed < 3; }

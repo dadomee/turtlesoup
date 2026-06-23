@@ -1,8 +1,11 @@
 package com.turtlesoup.room;
 
+import com.turtlesoup.puzzle.Puzzle;
+import com.turtlesoup.puzzle.PuzzleRepository;
 import org.springframework.stereotype.Service;
 
 import java.security.SecureRandom;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
@@ -15,10 +18,27 @@ public class RoomService {
 
     private final Map<String, Room> rooms = new ConcurrentHashMap<>();
     private final SecureRandom random = new SecureRandom();
+    private final PuzzleRepository puzzles;
+
+    public RoomService(PuzzleRepository puzzles) {
+        this.puzzles = puzzles;
+    }
 
     public Room create(String hostName) {
+        return create(hostName, false);
+    }
+
+    public Room create(String hostName, boolean aiHosted) {
         String code = newUniqueCode();
         Room room = new Room(code, hostName);
+        if (aiHosted) {
+            room.setAiHosted(true);
+            List<Puzzle> all = puzzles.findAll();
+            if (!all.isEmpty()) {
+                Puzzle p = all.get(random.nextInt(all.size()));
+                room.setPuzzle(p.getTitle(), p.getScenario(), p.getSolution());
+            }
+        }
         rooms.put(code, room);
         return room;
     }

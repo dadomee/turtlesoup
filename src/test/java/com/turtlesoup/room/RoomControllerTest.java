@@ -25,12 +25,22 @@ class RoomControllerTest {
 
     @Test
     void createReturnsCode() throws Exception {
-        when(rooms.create(eq("호스트"))).thenReturn(new Room("AB12", "호스트"));
+        when(rooms.create(eq("호스트"), eq(false))).thenReturn(new Room("AB12", "호스트"));
         mockMvc.perform(post("/api/rooms")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{\"hostName\":\"호스트\"}"))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.code").value("AB12"));
+    }
+
+    @Test
+    void createAiRoom() throws Exception {
+        when(rooms.create(eq("호스트"), eq(true))).thenReturn(new Room("CD34", "호스트"));
+        mockMvc.perform(post("/api/rooms")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"hostName\":\"호스트\",\"aiHosted\":true}"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.code").value("CD34"));
     }
 
     @Test

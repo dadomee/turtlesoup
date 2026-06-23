@@ -59,25 +59,32 @@ public class AiJudgeService {
         this.puzzleRepository = puzzleRepository;
     }
 
+    private Puzzle find(Long id) {
+        return puzzleRepository.findById(id).orElseThrow(() -> new PuzzleNotFoundException(id));
+    }
+
     public Verdict judge(Long puzzleId, String question) {
-        Puzzle puzzle = puzzleRepository.findById(puzzleId)
-            .orElseThrow(() -> new PuzzleNotFoundException(puzzleId));
+        Puzzle p = find(puzzleId);
+        return judge(p.getScenario(), p.getSolution(), question);
+    }
 
-        String system = String.format(SYSTEM_PROMPT, puzzle.getScenario(), puzzle.getSolution());
-
+    public Verdict judge(String scenario, String solution, String question) {
+        String system = String.format(SYSTEM_PROMPT, scenario, solution);
         String raw = chatClient.prompt()
             .system(system)
             .user("[플레이어 질문] " + question)
             .call()
             .content();
-
         return VerdictParser.parse(raw);
     }
 
     public String hint(Long puzzleId, int n) {
-        Puzzle puzzle = puzzleRepository.findById(puzzleId)
-            .orElseThrow(() -> new PuzzleNotFoundException(puzzleId));
-        String system = String.format(HINT_PROMPT, n, puzzle.getScenario(), puzzle.getSolution());
+        Puzzle p = find(puzzleId);
+        return hint(p.getScenario(), p.getSolution(), n);
+    }
+
+    public String hint(String scenario, String solution, int n) {
+        String system = String.format(HINT_PROMPT, n, scenario, solution);
         return chatClient.prompt()
             .system(system)
             .user("힌트를 주세요.")

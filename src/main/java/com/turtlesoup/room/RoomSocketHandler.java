@@ -1,6 +1,8 @@
 package com.turtlesoup.room;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.turtlesoup.ai.AiJudgeService;
+import com.turtlesoup.ai.Verdict;
 import com.turtlesoup.puzzle.Puzzle;
 import com.turtlesoup.puzzle.PuzzleRepository;
 import org.springframework.stereotype.Component;
@@ -14,18 +16,23 @@ import java.net.URI;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 @Component
 public class RoomSocketHandler extends TextWebSocketHandler {
 
     private final RoomService rooms;
     private final PuzzleRepository puzzles;
+    private final AiJudgeService ai;
     private final ObjectMapper mapper = new ObjectMapper();
     private final Map<String, Set<WebSocketSession>> sessions = new ConcurrentHashMap<>();
+    private final ExecutorService aiPool = Executors.newCachedThreadPool();
 
-    public RoomSocketHandler(RoomService rooms, PuzzleRepository puzzles) {
+    public RoomSocketHandler(RoomService rooms, PuzzleRepository puzzles, AiJudgeService ai) {
         this.rooms = rooms;
         this.puzzles = puzzles;
+        this.ai = ai;
     }
 
     @Override
@@ -54,7 +61,7 @@ public class RoomSocketHandler extends TextWebSocketHandler {
                 if (room.hasPuzzle()) {
                     sendTo(session, Map.of("type", "puzzle",
                         "title", room.getTitle(), "scenario", room.getScenario()));
-                    if (room.isHost(nick)) {
+                    if (room.isHost(nick) && !room.isAiHosted()) {
                         sendTo(session, Map.of("type", "solution", "solution", room.getSolution()));
                     }
                 }
@@ -88,10 +95,23 @@ public class RoomSocketHandler extends TextWebSocketHandler {
                 if (!room.hasPuzzle()) return;
                 broadcast(code, Map.of("type", "question",
                     "nickname", str(msg.get("nickname")), "text", str(msg.get("text"))));
+                if (room.isAiHosted() && !room.isEnded()) {
+                    final String scenario = room.getScenario();
+                    final String solution = room.getSolution();
+                    final String q = str(msg.get("text"));
+                    aiPool.submit(() -> {
+                        Verdict v = ai.judge(scenario, solution, q);
+                        broadcast(code, Map.of("type", "answer", "verdict", v.name()));
+                        if (v == Verdict.CORRECT) {
+                            room.end();
+                            broadcast(code, Map.of("type", "reveal", "solution", solution, "ended", true));
+                        }
+                    });
+                }
             }
             case "answer" -> {
                 String nick = str(msg.get("nickname"));
-                if (!room.isHost(nick) || room.isEnded() || !room.hasPuzzle()) return;
+                if (room.isAiHosted() || !room.isHost(nick) || room.isEnded() || !room.hasPuzzle()) return;
                 String verdict = str(msg.get("verdict"));
                 broadcast(code, Map.of("type", "answer", "verdict", verdict));
                 if ("CORRECT".equals(verdict)) {
@@ -106,12 +126,23 @@ public class RoomSocketHandler extends TextWebSocketHandler {
                 broadcast(code, Map.of("type", "reveal", "solution", room.getSolution(), "ended", true));
             }
             case "hint" -> {
-                String nick = str(msg.get("nickname"));
-                if (!room.isHost(nick) || room.isEnded() || !room.hasPuzzle() || !room.canHint()) return;
-                String text = str(msg.get("text"));
-                if (text.isBlank()) return;
-                int n = room.useHint();
-                broadcast(code, Map.of("type", "hint", "text", text, "count", n, "max", 3));
+                if (room.isEnded() || !room.hasPuzzle() || !room.canHint()) return;
+                if (room.isAiHosted()) {
+                    int n = room.useHint();
+                    final String scenario = room.getScenario();
+                    final String solution = room.getSolution();
+                    aiPool.submit(() -> {
+                        String text = ai.hint(scenario, solution, n);
+                        broadcast(code, Map.of("type", "hint", "text", text, "count", n, "max", 3));
+                    });
+                } else {
+                    String nick = str(msg.get("nickname"));
+                    if (!room.isHost(nick)) return;
+                    String text = str(msg.get("text"));
+                    if (text.isBlank()) return;
+                    int n = room.useHint();
+                    broadcast(code, Map.of("type", "hint", "text", text, "count", n, "max", 3));
+                }
             }
             default -> { }
         }

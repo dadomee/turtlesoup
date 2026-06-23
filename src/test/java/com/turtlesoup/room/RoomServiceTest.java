@@ -1,13 +1,30 @@
 package com.turtlesoup.room;
 
+import com.turtlesoup.puzzle.Difficulty;
+import com.turtlesoup.puzzle.Puzzle;
+import com.turtlesoup.puzzle.PuzzleRepository;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.when;
 
+@ExtendWith(MockitoExtension.class)
 class RoomServiceTest {
 
-    RoomService service = new RoomService();
+    @Mock
+    PuzzleRepository puzzles;
+
+    RoomService service;
+
+    @BeforeEach
+    void setup() {
+        service = new RoomService(puzzles);
+    }
 
     @Test
     void createReturnsRoomWithCode() {
@@ -66,5 +83,15 @@ class RoomServiceTest {
         Room room = service.create("호스트");
         service.remove(room.getCode());
         assertThatThrownBy(() -> service.get(room.getCode())).isInstanceOf(RoomNotFoundException.class);
+    }
+
+    @Test
+    void aiHostedRoomGetsRandomPuzzle() {
+        when(puzzles.findAll()).thenReturn(java.util.List.of(
+            new Puzzle("바다거북 스프", "상황", "정답", Difficulty.HARD, "고전", "h1", "h2", "h3")));
+        Room room = service.create("호스트", true);
+        assertThat(room.isAiHosted()).isTrue();
+        assertThat(room.hasPuzzle()).isTrue();
+        assertThat(room.getScenario()).isEqualTo("상황");
     }
 }

@@ -21,14 +21,14 @@ public class RoomController {
 
     @PostMapping
     public CreateRoomResponse create(@Valid @RequestBody CreateRoomRequest req) {
-        return new CreateRoomResponse(rooms.create(req.hostName()).getCode());
+        return new CreateRoomResponse(rooms.create(req.hostName(), req.aiHosted()).getCode());
     }
 
     @GetMapping("/{code}")
     public RoomInfo info(@PathVariable String code) {
         Room r = rooms.get(code);
         return new RoomInfo(r.getCode(), r.getHostName(), r.getTitle(), r.getScenario(),
-            r.isEnded(), r.participants());
+            r.isEnded(), r.isAiHosted(), r.participants());
     }
 
     @ResponseStatus(HttpStatus.NOT_FOUND)
