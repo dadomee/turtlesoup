@@ -7,6 +7,10 @@ let solved = false;
 let asking = false; // 요청 진행 중 중복 제출 방지
 let hintsUsed = 0;
 
+// 대화 저장: 문제별 localStorage (목록 갔다 와도/새로고침해도 복원)
+let convoKey = null;
+let convo = null; // { entries:[...], questionCount, hintsUsed, solved }
+
 const VERDICT_LABEL = {
   YES: "예",
   NO: "아니오",
@@ -17,6 +21,30 @@ const VERDICT_LABEL = {
 
 function meName() {
   return (typeof getNickname === "function" && getNickname()) || "나";
+}
+
+function loadConvo(id) {
+  try { return JSON.parse(localStorage.getItem("turtlesoup.ai." + id)); } catch (e) { return null; }
+}
+function saveConvo() {
+  if (!convoKey || !convo) return;
+  convo.questionCount = questionCount;
+  convo.hintsUsed = hintsUsed;
+  convo.solved = solved;
+  try { localStorage.setItem(convoKey, JSON.stringify(convo)); } catch (e) {}
+}
+function renderEntry(en) {
+  if (en.kind === "my") renderMy(en.text);
+  else if (en.kind === "botText") renderBotText(en.text);
+  else if (en.kind === "verdict") renderBotVerdict(en.verdict);
+  else if (en.kind === "solution") renderBotSolution(en.text);
+  else if (en.kind === "hint") renderBotHint(en.text, en.n);
+}
+function pushEntry(en) {
+  if (!convo) convo = { entries: [] };
+  convo.entries.push(en);
+  renderEntry(en);
+  saveConvo();
 }
 
 async function loadList() {
@@ -48,23 +76,35 @@ async function openPuzzle(id) {
   const p = await res.json();
 
   currentPuzzleId = id;
-  questionCount = 0;
-  solved = false;
-  document.getElementById("q-count").textContent = "0";
+  convoKey = "turtlesoup.ai." + id;
   document.getElementById("chat-log").textContent = "";
-  const input = document.getElementById("question-input");
-  input.value = "";
-  input.disabled = false;
-  document.getElementById("ask-btn").disabled = false;
-  hintsUsed = 0;
-  document.getElementById("hint-n").textContent = "0";
-  document.getElementById("hint-btn").disabled = false;
 
   document.getElementById("play-title").textContent = p.title;
   document.getElementById("play-meta").textContent = `난이도: ${p.difficulty}`;
   document.getElementById("play-scenario").textContent = p.scenario;
 
-  appendBotText("이 사건의 진상을 추리해 보세요. 예/아니오로 답할 수 있는 질문을 던지면 됩니다.");
+  const saved = loadConvo(id);
+  if (saved && Array.isArray(saved.entries) && saved.entries.length) {
+    // 저장된 대화 복원
+    convo = { entries: saved.entries };
+    questionCount = saved.questionCount || 0;
+    hintsUsed = saved.hintsUsed || 0;
+    solved = !!saved.solved;
+    saved.entries.forEach(renderEntry);
+  } else {
+    // 새 대화
+    convo = { entries: [] };
+    questionCount = 0; hintsUsed = 0; solved = false;
+    appendBotText("이 사건의 진상을 추리해 보세요. 예/아니오로 답할 수 있는 질문을 던지면 됩니다.");
+  }
+
+  document.getElementById("q-count").textContent = String(questionCount);
+  document.getElementById("hint-n").textContent = String(hintsUsed);
+  const input = document.getElementById("question-input");
+  input.value = "";
+  input.disabled = solved;
+  document.getElementById("ask-btn").disabled = solved;
+  document.getElementById("hint-btn").disabled = solved || hintsUsed >= 3;
 
   listView.classList.add("hidden");
   playView.classList.remove("hidden");
@@ -96,21 +136,24 @@ function textNode(t) {
   return d;
 }
 
-function appendMyMsg(text) {
+function renderMy(text) {
   const me = meName();
   msgRow("me", me, me.charAt(0).toUpperCase(), textNode(text));
 }
+function appendMyMsg(text) { pushEntry({ kind: "my", text }); }
 
-function appendBotText(text) {
+function renderBotText(text) {
   msgRow("bot", "추리비서 AI", "AI", textNode(text));
 }
+function appendBotText(text) { pushEntry({ kind: "botText", text }); }
 
-function appendBotVerdict(verdict) {
+function renderBotVerdict(verdict) {
   const pill = document.createElement("span");
   pill.className = "verdict " + verdict.toLowerCase();
   pill.textContent = VERDICT_LABEL[verdict] || verdict;
   msgRow("bot", "추리비서 AI", "AI", pill);
 }
+function appendBotVerdict(verdict) { pushEntry({ kind: "verdict", verdict }); }
 
 async function ask() {
   if (solved || asking) return;
@@ -166,7 +209,7 @@ async function revealSolution() {
   }
 }
 
-function appendBotSolution(text) {
+function renderBotSolution(text) {
   const box = document.createElement("div");
   box.className = "msg-text";
   const label = document.createElement("div");
@@ -182,8 +225,9 @@ function appendBotSolution(text) {
   box.append(label, body);
   msgRow("bot", "추리비서 AI", "AI", box);
 }
+function appendBotSolution(text) { pushEntry({ kind: "solution", text }); }
 
-function appendBotHint(text, n) {
+function renderBotHint(text, n) {
   const box = document.createElement("div");
   box.className = "msg-text";
   const label = document.createElement("div");
@@ -200,6 +244,7 @@ function appendBotHint(text, n) {
   box.append(label, body);
   msgRow("bot", "추리비서 AI", "AI", box);
 }
+function appendBotHint(text, n) { pushEntry({ kind: "hint", text, n }); }
 
 async function useHint() {
   if (solved || hintsUsed >= 3) return;
