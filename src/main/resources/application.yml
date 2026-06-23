@@ -9,7 +9,7 @@ spring:
           model: qwen2.5:7b
           temperature: 0.2
           repeat-penalty: 1.1
-          num-predict: 300
+          num-predict: 120
           keep-alive: 10m
       init:
         pull-model-strategy: never
