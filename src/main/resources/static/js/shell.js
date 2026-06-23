@@ -8,6 +8,7 @@
     var isHome = path === "/" || path === "/index.html" || path.endsWith("/index.html") || path.endsWith("/guide.html");
 
     if (!nick && !isHome) {
+      alert("먼저 이름(닉네임)을 정해야 입장할 수 있어요. 홈으로 이동합니다.");
       location.href = "/";
       return;
     }
