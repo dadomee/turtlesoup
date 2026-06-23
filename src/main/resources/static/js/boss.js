@@ -77,6 +77,8 @@
     document.body.appendChild(overlay);
     document.body.appendChild(hint);
     hint.addEventListener("click", toggle);
+    // 모바일엔 ` / Esc 키가 없으니, 가짜 Outlook 화면을 탭하면 게임으로 복귀
+    overlay.addEventListener("click", toggle);
   });
 
   document.addEventListener("keydown", function (e) {
