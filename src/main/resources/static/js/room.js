@@ -116,10 +116,10 @@ function onPuzzle(title, scenario) {
   document.getElementById("room-title").textContent = title;
   document.getElementById("room-scenario").textContent = scenario;
   document.getElementById("puzzle-picker").classList.add("hidden");
+  // 메시지(채팅) 입력은 방장·참가자 모두 사용. 방장은 추가로 답변/힌트 컨트롤도 노출.
+  document.getElementById("participant-composer").classList.remove("hidden");
   if (isHost) {
     document.getElementById("host-controls").classList.remove("hidden");
-  } else {
-    document.getElementById("participant-composer").classList.remove("hidden");
   }
 }
 
