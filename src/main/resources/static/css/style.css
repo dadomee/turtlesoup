@@ -180,3 +180,25 @@ select { cursor: pointer; }
 }
 .boss-overlay { position: fixed; inset: 0; z-index: 9999; display: none; background: #faf9f8; }
 .boss-overlay.show { display: block; }
+
+/* ===== 모바일 메뉴 버튼 (기본 숨김, shell.js가 주입) ===== */
+.menu-btn { display: none; background: transparent; border: none; color: #fff; font-size: 20px; line-height: 1; padding: 0 4px 0 0; cursor: pointer; }
+.nav-backdrop { display: none; }
+
+/* ===== 반응형 (모바일) ===== */
+@media (max-width: 760px) {
+  .rail { display: none; }
+  .sidebar {
+    position: fixed; left: 0; top: 0; bottom: 0; width: 240px; z-index: 200;
+    transform: translateX(-100%); transition: transform .2s ease;
+    box-shadow: 2px 0 14px rgba(0,0,0,0.25);
+  }
+  .sidebar.open { transform: translateX(0); }
+  .nav-backdrop.show { display: block; position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 150; }
+  .menu-btn { display: inline-flex; align-items: center; }
+  .topbar-search { display: none; }
+  .topbar-title { font-size: 13px; }
+  .content { padding: 14px 14px; }
+  .content-narrow { max-width: 100%; }
+  input[type=text], select, textarea { font-size: 16px; } /* iOS 입력 시 자동 확대 방지 */
+}

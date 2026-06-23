@@ -20,6 +20,34 @@
         el.textContent = nick.charAt(0).toUpperCase();
       });
     }
+    setupMobileNav();
+  }
+
+  // 모바일: 상단바에 ☰ 버튼을 넣고 사이드바를 오프캔버스로 토글
+  function setupMobileNav() {
+    var topbar = document.querySelector(".topbar");
+    var sidebar = document.querySelector(".sidebar");
+    if (!topbar || !sidebar || topbar.querySelector(".menu-btn")) return;
+
+    var btn = document.createElement("button");
+    btn.className = "menu-btn";
+    btn.setAttribute("aria-label", "메뉴");
+    btn.textContent = "☰";
+    topbar.insertBefore(btn, topbar.firstChild);
+
+    var backdrop = document.createElement("div");
+    backdrop.className = "nav-backdrop";
+    document.body.appendChild(backdrop);
+
+    function close() { sidebar.classList.remove("open"); backdrop.classList.remove("show"); }
+    function open() { sidebar.classList.add("open"); backdrop.classList.add("show"); }
+    btn.addEventListener("click", function () {
+      sidebar.classList.contains("open") ? close() : open();
+    });
+    backdrop.addEventListener("click", close);
+    sidebar.querySelectorAll(".nav-item").forEach(function (a) {
+      a.addEventListener("click", close);
+    });
   }
   if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", init);
