@@ -7,6 +7,7 @@ let isAiRoom = false;
 let myCode = null;
 let roomLog = [];      // 방 채팅 로그 캐시 (sessionStorage 복원용)
 let roomEnded = false;
+let aiHintTimer = null; // 힌트 버튼 잠금 안전 타이머
 
 const VERDICT = { YES: "예", NO: "아니오", IRRELEVANT: "상관없음", CORRECT: "정답!", UNKNOWN: "🤔 모호한 질문 — 더 구체적으로!" };
 const VCLASS = { YES: "yes", NO: "no", IRRELEVANT: "irrelevant", CORRECT: "correct", UNKNOWN: "unknown" };
@@ -274,6 +275,7 @@ function appendSolution(text) {
 }
 
 function appendHint(text, count) {
+  clearTimeout(aiHintTimer);   // 힌트 도착 → 잠금 안전 타이머 해제
   ["hint-count", "ai-hint-count"].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.textContent = count;
@@ -367,7 +369,9 @@ document.getElementById("hint-input").addEventListener("keydown", e => { if (e.k
 document.getElementById("ai-hint-btn").addEventListener("click", (e) => {
   const btn = e.currentTarget;
   if (!ws || btn.disabled) return;
-  btn.disabled = true; // 응답(힌트)이 올 때까지 잠금 — 연타·낭비 방지, AI가 느려도 피드백
+  btn.disabled = true; // 힌트 도착할 때까지 잠금 (연타·낭비 방지)
+  clearTimeout(aiHintTimer);
+  aiHintTimer = setTimeout(() => { btn.disabled = false; }, 30000); // 30초내 응답 없으면 자동 해제(안전장치)
   ws.send(JSON.stringify({ type: "hint", nickname: me() }));
 });
 document.getElementById("ai-reveal-btn").addEventListener("click", () => {

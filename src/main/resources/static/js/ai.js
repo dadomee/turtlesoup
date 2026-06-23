@@ -95,7 +95,7 @@ async function openPuzzle(id) {
     // 새 대화
     convo = { entries: [] };
     questionCount = 0; hintsUsed = 0; solved = false;
-    appendBotText("이 사건의 진상을 추리해 보세요. 예/아니오로 답할 수 있는 질문을 던지면 됩니다.");
+    appendBotText("이 사건의 진상을 추리해 보세요. 예/아니오 질문을 던지다가, 진상을 알겠으면 한 문장으로 설명해 보세요 — 맞으면 정답으로 인정돼요. (그냥 '정답'이라고만 쓰면 안 돼요!)");
   }
 
   document.getElementById("q-count").textContent = String(questionCount);
