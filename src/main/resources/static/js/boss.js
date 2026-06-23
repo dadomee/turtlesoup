@@ -1,8 +1,8 @@
 // 보스키: 백틱(`) 키 또는 우측 하단 힌트 클릭 → 가짜 Outlook 받은편지함으로 즉시 전환.
 // 다시 누르면 복귀. 탭 제목도 함께 위장한다.
 (function () {
-  const REAL_TITLE = document.title;
   const BOSS_TITLE = "받은 편지함 - Outlook";
+  let savedTitle = document.title;
 
   const overlay = document.createElement("div");
   overlay.className = "boss-overlay";
@@ -70,7 +70,8 @@
 
   function toggle() {
     const on = overlay.classList.toggle("show");
-    document.title = on ? BOSS_TITLE : REAL_TITLE;
+    if (on) { savedTitle = document.title; document.title = BOSS_TITLE; }
+    else { document.title = (window.appTitle ? window.appTitle() : savedTitle); }
   }
 
   document.addEventListener("DOMContentLoaded", function () {
