@@ -19,11 +19,12 @@ function judgeName() { return isAiRoom ? "추리비서 AI" : "출제자"; }
 
 // ===== 방 대화 저장/복원 (sessionStorage — 탭 새로고침 견딤, 탭 닫으면 정리) =====
 const ROOM_KEY = "turtlesoup.room";
+const ROOM_TTL_MS = 60 * 60 * 1000; // 나간 뒤에도 이 시간 안에는 복원 가능 (기본 1시간)
 function persistRoom() {
   if (!myCode) return;
   try {
     sessionStorage.setItem(ROOM_KEY, JSON.stringify({
-      code: myCode, isHost, isAiRoom, ended: roomEnded, log: roomLog
+      code: myCode, isHost, isAiRoom, ended: roomEnded, log: roomLog, savedAt: Date.now()
     }));
   } catch (e) {}
 }
@@ -78,6 +79,7 @@ function tryRestoreRoom() {
   let saved;
   try { saved = JSON.parse(sessionStorage.getItem(ROOM_KEY)); } catch (e) { saved = null; }
   if (!saved || !saved.code) return;
+  if (saved.savedAt && Date.now() - saved.savedAt > ROOM_TTL_MS) { clearPersistedRoom(); return; } // 시간 지남
   fetch(`/api/rooms/${saved.code}`)            // 방이 아직 살아있는지 확인
     .then(res => res.ok ? res.json() : Promise.reject())
     .then(info => {
@@ -341,8 +343,8 @@ function sendHint() {
 
 function leaveRoom() {
   if (ws) ws.close();
-  clearPersistedRoom();           // 의도적으로 나가면 복원하지 않음
-  roomLog = []; roomEnded = false; myCode = null;
+  persistRoom();                  // 나가도 일정 시간(ROOM_TTL_MS) 안에는 다시 들어가면 복원
+  myCode = null; roomLog = []; roomEnded = false;
   roomView.classList.add("hidden");
   lobby.classList.remove("hidden");
 }
