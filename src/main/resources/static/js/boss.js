@@ -13,8 +13,8 @@
         <div style="flex:1;max-width:520px;background:rgba(255,255,255,.2);border-radius:4px;padding:5px 10px;font-size:12px;">메일 및 사람 검색</div>
         <span>김다솜</span>
       </div>
-      <div style="display:flex;flex:1;min-height:0;">
-        <div style="width:200px;background:#f3f2f1;border-right:1px solid #e1dfdd;padding:10px 8px;font-size:13px;">
+      <div class="ob-body" style="display:flex;flex:1;min-height:0;">
+        <div class="ob-folders" style="background:#f3f2f1;border-right:1px solid #e1dfdd;padding:10px 8px;font-size:13px;">
           <div style="font-weight:600;margin:6px 8px;">즐겨찾기</div>
           <div style="padding:7px 10px;border-radius:4px;background:#e1eaf7;font-weight:600;">받은 편지함 <span style="float:right;color:#0f6cbd;">12</span></div>
           <div style="padding:7px 10px;color:#444;">보낸 편지함</div>
@@ -25,7 +25,7 @@
           <div style="padding:7px 10px;color:#444;">프로젝트_A</div>
           <div style="padding:7px 10px;color:#444;">결재문서</div>
         </div>
-        <div style="width:340px;border-right:1px solid #e1dfdd;overflow:auto;font-size:13px;">
+        <div class="ob-list" style="border-right:1px solid #e1dfdd;overflow:auto;font-size:13px;">
           ${mailListItem("재무팀", "[필독] 3분기 예산 집행 내역 확인 요청", "안녕하세요. 각 부서 3분기 예산 집행 내역을 첨부 양식에 맞추어...", "오전 9:14", true, true)}
           ${mailListItem("박상무", "주간업무보고 양식 변경 안내", "다음 주부터 주간보고는 신규 양식으로 제출 바랍니다. 기존...", "오전 8:52", true, false)}
           ${mailListItem("인사팀", "연차 사용 촉진 제도 안내", "미사용 연차 소진 계획서를 이번 주 금요일까지 제출해 주시기...", "어제", false, false)}
@@ -33,7 +33,7 @@
           ${mailListItem("김대리", "어제 회의록 공유드립니다", "회의록 정리해서 공유드립니다. 액션 아이템 확인 부탁드려요...", "수 14:30", false, false)}
           ${mailListItem("총무팀", "비품 신청 마감 안내", "이번 달 비품 신청은 25일까지입니다. 신청서는 그룹웨어에서...", "화 11:05", false, false)}
         </div>
-        <div style="flex:1;min-width:0;padding:18px 24px;overflow:auto;">
+        <div class="ob-pane" style="flex:1;min-width:0;padding:18px 24px;overflow:auto;">
           <div style="font-size:18px;font-weight:600;margin-bottom:8px;">[필독] 3분기 예산 집행 내역 확인 요청</div>
           <div style="display:flex;align-items:center;gap:10px;padding-bottom:12px;border-bottom:1px solid #e1dfdd;margin-bottom:14px;">
             <div style="width:36px;height:36px;border-radius:50%;background:#0f6cbd;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:600;">재</div>

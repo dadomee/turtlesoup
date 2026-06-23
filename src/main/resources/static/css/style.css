@@ -180,6 +180,8 @@ select { cursor: pointer; }
 }
 .boss-overlay { position: fixed; inset: 0; z-index: 9999; display: none; background: #faf9f8; }
 .boss-overlay.show { display: block; }
+.ob-folders { width: 200px; flex-shrink: 0; }
+.ob-list { width: 340px; flex-shrink: 0; }
 
 /* ===== 모바일 메뉴 버튼 (기본 숨김, shell.js가 주입) ===== */
 .menu-btn { display: none; background: transparent; border: none; color: #fff; font-size: 20px; line-height: 1; padding: 0 4px 0 0; cursor: pointer; }
@@ -201,4 +203,7 @@ select { cursor: pointer; }
   .content { padding: 14px 14px; }
   .content-narrow { max-width: 100%; }
   input[type=text], select, textarea { font-size: 16px; } /* iOS 입력 시 자동 확대 방지 */
+  /* 보스 오버레이(Outlook): 모바일에선 폴더·본문 접고 메일 목록만 전체폭 */
+  .ob-folders, .ob-pane { display: none; }
+  .ob-list { width: 100%; border-right: none; }
 }
