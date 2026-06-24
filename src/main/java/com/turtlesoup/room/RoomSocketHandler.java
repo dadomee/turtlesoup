@@ -60,7 +60,8 @@ public class RoomSocketHandler extends TextWebSocketHandler {
                     "text", nick + " 님이 입장했습니다.", "participants", room.participants()));
                 if (room.hasPuzzle()) {
                     sendTo(session, Map.of("type", "puzzle",
-                        "title", room.getTitle(), "scenario", room.getScenario()));
+                        "title", room.getTitle(), "scenario", room.getScenario(),
+                        "hintsUsed", room.getHintsUsed()));
                     if (room.isHost(nick) && !room.isAiHosted()) {
                         sendTo(session, Map.of("type", "solution", "solution", room.getSolution()));
                     }

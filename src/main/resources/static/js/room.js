@@ -201,7 +201,7 @@ function setPuzzle() {
 
 function handleEvent(ev) {
   if (ev.type === "system") appendSystem(ev.text);          // 알림 — 캐시 안 함
-  else if (ev.type === "puzzle") onPuzzle(ev.title, ev.scenario);
+  else if (ev.type === "puzzle") onPuzzle(ev.title, ev.scenario, ev.hintsUsed);
   else if (ev.type === "solution") showHostSolution(ev.solution);
   else if (ev.type === "chat") addChat({ k: "chat", name: ev.nickname, text: ev.text });
   else if (ev.type === "question") addChat({ k: "question", name: ev.nickname, text: ev.text });
@@ -217,7 +217,7 @@ function handleEvent(ev) {
   }
 }
 
-function onPuzzle(title, scenario) {
+function onPuzzle(title, scenario, hintsUsed) {
   document.getElementById("room-title").textContent = title;
   document.getElementById("room-scenario").textContent = scenario;
   document.getElementById("puzzle-picker").classList.add("hidden");
@@ -229,6 +229,7 @@ function onPuzzle(title, scenario) {
   }
   const who = isAiRoom ? "AI" : "출제자";
   appendSystem(`💬 자유롭게 대화하세요. ${who}에게 예/아니오 질문은 '/' 만 치고 이어서 입력하면 돼요.`);
+  if (typeof hintsUsed === "number" && hintsUsed > 0) setHintCount(hintsUsed); // 늦게 입장해도 힌트 소진상태 반영(다 쓰면 잠금)
 }
 
 function showHostSolution(solution) {
