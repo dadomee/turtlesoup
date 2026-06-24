@@ -430,6 +430,13 @@ document.getElementById("create-ai-btn").addEventListener("click", () => createR
 document.getElementById("join-btn").addEventListener("click", joinRoom);
 document.getElementById("join-code").addEventListener("keydown", e => { if (e.key === "Enter" && !e.isComposing) joinRoom(); });
 document.getElementById("set-puzzle-btn").addEventListener("click", setPuzzle);
+document.getElementById("random-puzzle-btn").addEventListener("click", () => {
+  if (!ws) return;
+  const sel = document.getElementById("puzzle-select");
+  if (!sel.options.length) return;
+  const pid = Number(sel.options[Math.floor(Math.random() * sel.options.length)].value);
+  ws.send(JSON.stringify({ type: "setPuzzle", nickname: me(), puzzleId: pid }));
+});
 document.getElementById("room-send").addEventListener("click", sendQuestion);
 document.getElementById("room-input").addEventListener("keydown", e => { if (e.key === "Enter" && !e.isComposing) sendQuestion(); });
 // "/" 새로 입력했을 때만 "/질문 "으로 자동완성 (지우다가 "/"가 돼도 다시 안 붙게)
