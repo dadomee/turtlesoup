@@ -179,12 +179,15 @@ select { cursor: pointer; }
   box-shadow: 0 3px 10px rgba(0,0,0,0.07);
 }
 
-/* 방 입장 중: 페이지 전체 대신 채팅 영역(#room-log)만 내부 스크롤 */
-body.in-room .content { overflow: hidden; }
-body.in-room .content-narrow { height: 100%; display: flex; flex-direction: column; min-height: 0; }
-body.in-room #room-view { flex: 1; display: flex; flex-direction: column; min-height: 0; }
-body.in-room .chat-card { flex: 1; display: flex; flex-direction: column; min-height: 0; margin-bottom: 0; }
-body.in-room #room-log { flex: 1; overflow-y: auto; min-height: 0; }
+/* 방 입장 중: 페이지 전체 대신 채팅 영역(#room-log)만 내부 스크롤 (데스크톱 전용)
+   ※ 모바일은 키보드가 올라올 때 입력칸이 가려지지 않도록 일반 페이지 스크롤을 유지한다 */
+@media (min-width: 761px) {
+  body.in-room .content { overflow: hidden; }
+  body.in-room .content-narrow { height: 100%; display: flex; flex-direction: column; min-height: 0; }
+  body.in-room #room-view { flex: 1; display: flex; flex-direction: column; min-height: 0; }
+  body.in-room .chat-card { flex: 1; display: flex; flex-direction: column; min-height: 0; margin-bottom: 0; }
+  body.in-room #room-log { flex: 1; overflow-y: auto; min-height: 0; }
+}
 
 /* 토스트(비차단 알림) */
 .toast {

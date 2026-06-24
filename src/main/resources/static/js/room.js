@@ -200,7 +200,10 @@ function setPuzzle() {
 }
 
 function handleEvent(ev) {
-  if (ev.type === "system") appendSystem(ev.text);          // 알림 — 캐시 안 함
+  if (ev.type === "system") {
+    appendSystem(ev.text);                                  // 알림 — 캐시 안 함
+    if (Array.isArray(ev.participants)) updateParticipants(ev.participants);
+  }
   else if (ev.type === "puzzle") onPuzzle(ev.title, ev.scenario, ev.hintsUsed);
   else if (ev.type === "solution") showHostSolution(ev.solution);
   else if (ev.type === "chat") addChat({ k: "chat", name: ev.nickname, text: ev.text });
@@ -235,6 +238,12 @@ function onPuzzle(title, scenario, hintsUsed) {
 function showHostSolution(solution) {
   document.getElementById("host-solution-text").textContent = solution;
   document.getElementById("host-solution").classList.remove("hidden");
+}
+
+function updateParticipants(list) {
+  const el = document.getElementById("room-participants");
+  if (!el) return;
+  el.textContent = list.length ? `👥 ${list.length}명: ${list.join(", ")}` : "";
 }
 
 // #room-log가 스크롤 컨테이너 (페이지 전체가 아니라 채팅창만 스크롤)
@@ -415,9 +424,9 @@ document.getElementById("join-code").addEventListener("keydown", e => { if (e.ke
 document.getElementById("set-puzzle-btn").addEventListener("click", setPuzzle);
 document.getElementById("room-send").addEventListener("click", sendQuestion);
 document.getElementById("room-input").addEventListener("keydown", e => { if (e.key === "Enter" && !e.isComposing) sendQuestion(); });
-// "/" 한 번 치면 "/질문 "으로 자동완성 (매번 타이핑하기 귀찮으니)
+// "/" 새로 입력했을 때만 "/질문 "으로 자동완성 (지우다가 "/"가 돼도 다시 안 붙게)
 document.getElementById("room-input").addEventListener("input", e => {
-  if (e.target.value === "/") e.target.value = ASK_PREFIX + " ";
+  if (e.target.value === "/" && (e.inputType || "").startsWith("insert")) e.target.value = ASK_PREFIX + " ";
 });
 document.querySelectorAll("#host-controls .ans").forEach(b => {
   b.addEventListener("click", () => sendAnswer(b.dataset.v));
