@@ -222,6 +222,9 @@ function showHostSolution(solution) {
 }
 
 function row(side, name, contentEl) {
+  const c = document.querySelector(".content");
+  // 추가 전에 '맨 아래 근처를 보고 있었나' 판단 (위로 올려 읽는 중이면 강제로 안 내림)
+  const nearBottom = !c || (c.scrollHeight - c.scrollTop - c.clientHeight < 80);
   const r = document.createElement("div");
   r.className = "msg";
   const av = document.createElement("div");
@@ -233,10 +236,8 @@ function row(side, name, contentEl) {
   nm.textContent = name;
   body.append(nm, contentEl);
   r.append(av, body);
-  const log = document.getElementById("room-log");
-  log.appendChild(r);
-  const c = document.querySelector(".content");
-  if (c) c.scrollTop = c.scrollHeight;
+  document.getElementById("room-log").appendChild(r);
+  if (c && nearBottom) c.scrollTop = c.scrollHeight;
 }
 
 function textDiv(t) {

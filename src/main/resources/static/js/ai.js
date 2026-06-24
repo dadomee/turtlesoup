@@ -123,10 +123,10 @@ function msgRow(side, name, avatarText, contentEl) {
   body.appendChild(nm);
   body.appendChild(contentEl);
   row.append(av, body);
-  const log = document.getElementById("chat-log");
-  log.appendChild(row);
   const content = document.querySelector(".content");
-  if (content) content.scrollTop = content.scrollHeight;
+  const nearBottom = !content || (content.scrollHeight - content.scrollTop - content.clientHeight < 80);
+  document.getElementById("chat-log").appendChild(row);
+  if (content && nearBottom) content.scrollTop = content.scrollHeight;
 }
 
 function textNode(t) {
