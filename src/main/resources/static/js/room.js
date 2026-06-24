@@ -192,7 +192,6 @@ function handleEvent(ev) {
   else if (ev.type === "answer") addChat({ k: "verdict", verdict: ev.verdict });
   else if (ev.type === "hint") addChat({ k: "hint", text: ev.text, count: ev.count });
   else if (ev.type === "reveal") {
-    appendSystem("📖 정답이 공개되었습니다.");
     addChat({ k: "solution", text: ev.solution });
     roomEnded = true;
     persistRoom();

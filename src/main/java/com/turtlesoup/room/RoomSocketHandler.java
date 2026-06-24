@@ -110,6 +110,7 @@ public class RoomSocketHandler extends TextWebSocketHandler {
                         broadcast(code, Map.of("type", "answer", "verdict", v.name()));
                         if (v == Verdict.CORRECT) {
                             room.end();
+                            broadcast(code, Map.of("type", "system", "text", "🎉 정답입니다! 해설을 공개해요."));
                             broadcast(code, Map.of("type", "reveal", "solution", solution, "ended", true));
                         }
                     });
@@ -122,6 +123,7 @@ public class RoomSocketHandler extends TextWebSocketHandler {
                 broadcast(code, Map.of("type", "answer", "verdict", verdict));
                 if ("CORRECT".equals(verdict)) {
                     room.end();
+                    broadcast(code, Map.of("type", "system", "text", "🎉 정답입니다! 해설을 공개해요."));
                     broadcast(code, Map.of("type", "reveal", "solution", room.getSolution(), "ended", true));
                 }
             }
@@ -130,12 +132,17 @@ public class RoomSocketHandler extends TextWebSocketHandler {
                 String nick = str(msg.get("nickname"));
                 if (!room.isAiHosted() && !room.isHost(nick)) return; // 사람 방은 출제자만, AI 방은 누구나
                 room.end();
+                broadcast(code, Map.of("type", "system",
+                    "text", (nick.isBlank() ? "누군가" : nick) + "님이 정답을 공개했어요 🏳️"));
                 broadcast(code, Map.of("type", "reveal", "solution", room.getSolution(), "ended", true));
             }
             case "hint" -> {
                 if (room.isEnded() || !room.hasPuzzle() || !room.canHint()) return;
                 if (room.isAiHosted()) {
+                    String nick = str(msg.get("nickname"));
                     int n = room.useHint();
+                    broadcast(code, Map.of("type", "system",
+                        "text", (nick.isBlank() ? "누군가" : nick) + "님이 힌트를 요청했어요 💡 (" + n + "/3)"));
                     final String scenario = room.getScenario();
                     final String solution = room.getSolution();
                     aiPool.submit(() -> {
