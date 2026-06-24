@@ -38,6 +38,13 @@ public class Room {
     public String getSolution() { return solution; }
     public boolean isEnded() { return ended; }
     public void end() { this.ended = true; }
+    public void reset() {  // 새 게임: 문제·힌트·종료상태 초기화
+        this.title = null;
+        this.scenario = null;
+        this.solution = null;
+        this.ended = false;
+        this.hintsUsed = 0;
+    }
     public boolean isHost(String name) { return hostName.equals(name); }
 
     public boolean isAiHosted() { return aiHosted; }

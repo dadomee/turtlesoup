@@ -8,6 +8,7 @@ let myCode = null;
 let roomLog = [];      // 방 채팅 로그 캐시 (sessionStorage 복원용)
 let roomEnded = false;
 let aiHintTimer = null; // 힌트 버튼 잠금 안전 타이머
+let hintShown = 0;      // 표시된 힌트 수 (비동기 역순 도착 대비 최댓값 유지)
 
 const VERDICT = { YES: "예", NO: "아니오", IRRELEVANT: "상관없음", CORRECT: "정답!", UNKNOWN: "🤔 모호한 질문 — 더 구체적으로!" };
 const VCLASS = { YES: "yes", NO: "no", IRRELEVANT: "irrelevant", CORRECT: "correct", UNKNOWN: "unknown" };
@@ -17,6 +18,16 @@ function me() {
 }
 
 function judgeName() { return isAiRoom ? "추리비서 AI" : "출제자"; }
+
+// 비차단 토스트 알림 (alert 대체)
+function toast(msg) {
+  let t = document.getElementById("toast");
+  if (!t) { t = document.createElement("div"); t.id = "toast"; t.className = "toast"; document.body.appendChild(t); }
+  t.textContent = msg;
+  t.classList.add("show");
+  clearTimeout(toast._timer);
+  toast._timer = setTimeout(() => t.classList.remove("show"), 2800);
+}
 
 // ===== 방 대화 저장/복원 (sessionStorage — 탭 새로고침 견딤, 탭 닫으면 정리) =====
 const ROOM_KEY = "turtlesoup.room";
@@ -39,7 +50,7 @@ function renderLogEntry(e) {
   else if (e.k === "hint") appendHint(e.text, e.count);
   else if (e.k === "solution") appendSolution(e.text);
 }
-function addChat(entry) {  // 렌더 + 캐시 + 저장 (잡담/질문/판정/힌트/해설만 — 시스템 알림은 캐시 안 함)
+function addChat(entry) {  // 렌더 + 캐시 + 저장 (시스템 알림은 캐시 안 함)
   renderLogEntry(entry);
   roomLog.push(entry);
   persistRoom();
@@ -53,9 +64,10 @@ function connectWs(code) {
 }
 function restoreEnterRoom(code, hasPuzzle) {
   myCode = code;
+  hintShown = 0;
   document.getElementById("room-code-badge").textContent = "방 코드: " + code;
   document.getElementById("room-log").textContent = "";
-  ["host-solution", "participant-composer", "host-controls", "ai-hint-bar", "puzzle-picker"]
+  ["host-solution", "participant-composer", "host-controls", "ai-hint-bar", "puzzle-picker", "end-actions"]
     .forEach(id => document.getElementById(id).classList.add("hidden"));
   document.getElementById("room-title").textContent = "대기 중…";
   if (!hasPuzzle) {
@@ -73,14 +85,15 @@ function restoreEnterRoom(code, hasPuzzle) {
   roomLog.forEach(renderLogEntry);   // 캐시된 지난 대화 복원
   lobby.classList.add("hidden");
   roomView.classList.remove("hidden");
-  connectWs(code);                   // 재연결 → 서버가 puzzle/solution 다시 보냄 → onPuzzle이 화면 복구
-  if (roomEnded) endGame();
+  document.body.classList.add("in-room");
+  connectWs(code);                   // 재연결 → 서버가 puzzle/solution 다시 보냄
+  if (roomEnded) { endGame(); showEndActions(); }
 }
 function tryRestoreRoom() {
   let saved;
   try { saved = JSON.parse(sessionStorage.getItem(ROOM_KEY)); } catch (e) { saved = null; }
   if (!saved || !saved.code) return;
-  if (saved.savedAt && Date.now() - saved.savedAt > ROOM_TTL_MS) { clearPersistedRoom(); return; } // 시간 지남
+  if (saved.savedAt && Date.now() - saved.savedAt > ROOM_TTL_MS) { clearPersistedRoom(); return; }
   fetch(`/api/rooms/${saved.code}`)            // 방이 아직 살아있는지 확인
     .then(res => res.ok ? res.json() : Promise.reject())
     .then(info => {
@@ -121,7 +134,7 @@ async function createRoom(aiHosted) {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ hostName: me(), aiHosted: !!aiHosted })
   });
-  if (!res.ok) { alert("방 생성에 실패했습니다."); return; }
+  if (!res.ok) { toast("방 생성에 실패했습니다."); return; }
   const data = await res.json();
   isHost = true;
   isAiRoom = !!aiHosted;
@@ -132,8 +145,12 @@ async function joinRoom() {
   const code = document.getElementById("join-code").value.trim().toUpperCase();
   if (!code) return;
   const res = await fetch(`/api/rooms/${code}`);
-  if (!res.ok) { alert("그런 방이 없습니다. 코드를 확인하세요."); return; }
+  if (!res.ok) { toast("그런 방이 없습니다. 코드를 확인하세요."); return; }
   const info = await res.json();
+  if ((info.participants || []).includes(me())) {
+    toast("'" + me() + "' 닉네임은 이미 이 방에 있어요. 홈에서 이름을 바꿔 입장하세요.");
+    return;
+  }
   isHost = (info.hostName === me());
   isAiRoom = !!info.aiHosted;
   enterRoom(info.code);
@@ -143,13 +160,11 @@ function enterRoom(code) {
   myCode = code;
   roomLog = [];
   roomEnded = false;
+  hintShown = 0;
   document.getElementById("room-code-badge").textContent = "방 코드: " + code;
   document.getElementById("room-log").textContent = "";
-  document.getElementById("host-solution").classList.add("hidden");
-  document.getElementById("participant-composer").classList.add("hidden");
-  document.getElementById("host-controls").classList.add("hidden");
-  document.getElementById("ai-hint-bar").classList.add("hidden");
-  document.getElementById("puzzle-picker").classList.add("hidden");
+  ["host-solution", "participant-composer", "host-controls", "ai-hint-bar", "puzzle-picker", "end-actions"]
+    .forEach(id => document.getElementById(id).classList.add("hidden"));
   document.getElementById("room-title").textContent = "대기 중…";
 
   if (isAiRoom) {
@@ -163,6 +178,7 @@ function enterRoom(code) {
 
   lobby.classList.add("hidden");
   roomView.classList.remove("hidden");
+  document.body.classList.add("in-room");
 
   connectWs(code);
   persistRoom();
@@ -177,7 +193,7 @@ function setPuzzle() {
   } else {
     const scenario = document.getElementById("custom-scenario").value.trim();
     const solution = document.getElementById("custom-solution").value.trim();
-    if (!scenario || !solution) { alert("상황과 정답을 입력하세요."); return; }
+    if (!scenario || !solution) { toast("상황과 정답을 입력하세요."); return; }
     const title = document.getElementById("custom-title").value.trim();
     ws.send(JSON.stringify({ type: "setPuzzle", nickname: me(), title, scenario, solution }));
   }
@@ -191,11 +207,13 @@ function handleEvent(ev) {
   else if (ev.type === "question") addChat({ k: "question", name: ev.nickname, text: ev.text });
   else if (ev.type === "answer") addChat({ k: "verdict", verdict: ev.verdict });
   else if (ev.type === "hint") addChat({ k: "hint", text: ev.text, count: ev.count });
+  else if (ev.type === "newgame") restartGame();
   else if (ev.type === "reveal") {
     addChat({ k: "solution", text: ev.solution });
     roomEnded = true;
     persistRoom();
     endGame();
+    showEndActions();
   }
 }
 
@@ -203,16 +221,14 @@ function onPuzzle(title, scenario) {
   document.getElementById("room-title").textContent = title;
   document.getElementById("room-scenario").textContent = scenario;
   document.getElementById("puzzle-picker").classList.add("hidden");
-  // 메시지(채팅) 입력은 모두 사용
   document.getElementById("participant-composer").classList.remove("hidden");
   if (isAiRoom) {
-    // AI 방: 모두 동등한 게스트 + 공유 힌트 버튼 (출제자 컨트롤 없음)
     document.getElementById("ai-hint-bar").classList.remove("hidden");
   } else if (isHost) {
     document.getElementById("host-controls").classList.remove("hidden");
   }
   const who = isAiRoom ? "AI" : "출제자";
-  appendSystem(`💬 자유롭게 대화하세요. ${who}에게 예/아니오 질문을 하려면 "/질문 사람이 죽었나요?" 처럼 입력하세요.`);
+  appendSystem(`💬 자유롭게 대화하세요. ${who}에게 예/아니오 질문은 '/' 만 치고 이어서 입력하면 돼요.`);
 }
 
 function showHostSolution(solution) {
@@ -220,10 +236,10 @@ function showHostSolution(solution) {
   document.getElementById("host-solution").classList.remove("hidden");
 }
 
+// #room-log가 스크롤 컨테이너 (페이지 전체가 아니라 채팅창만 스크롤)
 function row(side, name, contentEl) {
-  const c = document.querySelector(".content");
-  // 추가 전에 '맨 아래 근처를 보고 있었나' 판단 (위로 올려 읽는 중이면 강제로 안 내림)
-  const nearBottom = !c || (c.scrollHeight - c.scrollTop - c.clientHeight < 80);
+  const log = document.getElementById("room-log");
+  const nearBottom = !log || (log.scrollHeight - log.scrollTop - log.clientHeight < 80);
   const r = document.createElement("div");
   r.className = "msg";
   const av = document.createElement("div");
@@ -235,8 +251,8 @@ function row(side, name, contentEl) {
   nm.textContent = name;
   body.append(nm, contentEl);
   r.append(av, body);
-  document.getElementById("room-log").appendChild(r);
-  if (c && nearBottom) c.scrollTop = c.scrollHeight;
+  log.appendChild(r);
+  if (log && nearBottom) log.scrollTop = log.scrollHeight;
 }
 
 function textDiv(t) {
@@ -249,11 +265,14 @@ function textDiv(t) {
 function appendMsg(side, name, text) { row(side, name, textDiv(text)); }
 
 function appendSystem(text) {
+  const log = document.getElementById("room-log");
+  const nearBottom = !log || (log.scrollHeight - log.scrollTop - log.clientHeight < 80);
   const p = document.createElement("p");
   p.className = "muted";
   p.style.textAlign = "center";
   p.textContent = text;
-  document.getElementById("room-log").appendChild(p);
+  log.appendChild(p);
+  if (log && nearBottom) log.scrollTop = log.scrollHeight;
 }
 
 function appendVerdict(v) {
@@ -276,10 +295,6 @@ function appendSolution(text) {
 
 function appendHint(text, count) {
   clearTimeout(aiHintTimer);   // 힌트 도착 → 잠금 안전 타이머 해제
-  ["hint-count", "ai-hint-count"].forEach(id => {
-    const el = document.getElementById(id);
-    if (el) el.textContent = count;
-  });
   const box = document.createElement("div");
   box.className = "msg-text";
   const label = document.createElement("div");
@@ -295,14 +310,24 @@ function appendHint(text, count) {
   body.textContent = text;
   box.append(label, body);
   row("bot", judgeName() + " 힌트", box);
-  if (count >= 3) {
+  setHintCount(count);
+}
+
+// 힌트 카운트: 최댓값 유지(역순 도착 대비), 3이면 잠금 고정
+function setHintCount(count) {
+  hintShown = Math.max(hintShown, count || 0);
+  ["hint-count", "ai-hint-count"].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = hintShown;
+  });
+  if (hintShown >= 3) {
     ["hint-send", "hint-input", "ai-hint-btn"].forEach(id => {
       const el = document.getElementById(id);
       if (el) el.disabled = true;
     });
   } else {
-    const ab = document.getElementById("ai-hint-btn"); // 응답 왔으니 다음 힌트 위해 다시 활성화
-    if (ab) ab.disabled = false;
+    const ab = document.getElementById("ai-hint-btn");
+    if (ab && !roomEnded) ab.disabled = false;
   }
 }
 
@@ -312,6 +337,36 @@ function endGame() {
     if (el) el.disabled = true;
   });
   document.querySelectorAll("#host-controls button").forEach(b => b.disabled = true);
+}
+
+// 게임 종료 후 옵션(새 게임 / 나가기) 노출
+function showEndActions() {
+  const ng = document.getElementById("newgame-btn");
+  if (ng) ng.classList.toggle("hidden", !(isAiRoom || isHost)); // 사람 방 참가자는 새 게임 불가
+  const ea = document.getElementById("end-actions");
+  if (ea) ea.classList.remove("hidden");
+}
+
+// 새 게임: 화면 초기화 (이어서 서버가 새 문제를 보내거나, 호스트가 다시 고름)
+function restartGame() {
+  roomLog = []; roomEnded = false; hintShown = 0;
+  clearTimeout(aiHintTimer);
+  document.getElementById("room-log").textContent = "";
+  ["host-solution", "host-controls", "end-actions", "participant-composer", "ai-hint-bar", "puzzle-picker"]
+    .forEach(id => document.getElementById(id).classList.add("hidden"));
+  ["hint-count", "ai-hint-count"].forEach(id => { const el = document.getElementById(id); if (el) el.textContent = "0"; });
+  ["room-input", "room-send", "hint-input", "hint-send", "ai-hint-btn", "ai-reveal-btn"].forEach(id => { const el = document.getElementById(id); if (el) el.disabled = false; });
+  document.querySelectorAll("#host-controls button").forEach(b => b.disabled = false);
+  document.getElementById("room-title").textContent = "대기 중…";
+  if (isAiRoom) {
+    document.getElementById("room-scenario").textContent = "🤖 AI가 새 문제를 준비하고 있어요…";
+  } else if (isHost) {
+    document.getElementById("room-scenario").textContent = "새 문제를 고르면 다시 시작됩니다.";
+    document.getElementById("puzzle-picker").classList.remove("hidden");
+  } else {
+    document.getElementById("room-scenario").textContent = "출제자가 새 문제를 고르는 중입니다…";
+  }
+  persistRoom();
 }
 
 const ASK_PREFIX = "/질문";
@@ -347,6 +402,7 @@ function leaveRoom() {
   if (ws) ws.close();
   persistRoom();                  // 나가도 일정 시간(ROOM_TTL_MS) 안에는 다시 들어가면 복원
   myCode = null; roomLog = []; roomEnded = false;
+  document.body.classList.remove("in-room");
   roomView.classList.add("hidden");
   lobby.classList.remove("hidden");
 }
@@ -358,6 +414,10 @@ document.getElementById("join-code").addEventListener("keydown", e => { if (e.ke
 document.getElementById("set-puzzle-btn").addEventListener("click", setPuzzle);
 document.getElementById("room-send").addEventListener("click", sendQuestion);
 document.getElementById("room-input").addEventListener("keydown", e => { if (e.key === "Enter" && !e.isComposing) sendQuestion(); });
+// "/" 한 번 치면 "/질문 "으로 자동완성 (매번 타이핑하기 귀찮으니)
+document.getElementById("room-input").addEventListener("input", e => {
+  if (e.target.value === "/") e.target.value = ASK_PREFIX + " ";
+});
 document.querySelectorAll("#host-controls .ans").forEach(b => {
   b.addEventListener("click", () => sendAnswer(b.dataset.v));
 });
@@ -369,15 +429,16 @@ document.getElementById("hint-input").addEventListener("keydown", e => { if (e.k
 document.getElementById("ai-hint-btn").addEventListener("click", (e) => {
   const btn = e.currentTarget;
   if (!ws || btn.disabled) return;
-  btn.disabled = true; // 힌트 도착할 때까지 잠금 (연타·낭비 방지)
+  btn.disabled = true; // 힌트 도착할 때까지 잠금 (연타·낭비·역순 방지)
   clearTimeout(aiHintTimer);
-  aiHintTimer = setTimeout(() => { btn.disabled = false; }, 30000); // 30초내 응답 없으면 자동 해제(안전장치)
+  aiHintTimer = setTimeout(() => { if (!roomEnded && hintShown < 3) btn.disabled = false; }, 30000);
   ws.send(JSON.stringify({ type: "hint", nickname: me() }));
 });
 document.getElementById("ai-reveal-btn").addEventListener("click", () => {
-  if (ws && confirm("정답을 공개하면 게임이 끝나요. 모두에게 공개할까요?")) {
-    ws.send(JSON.stringify({ type: "reveal", nickname: me() }));
-  }
+  if (ws) ws.send(JSON.stringify({ type: "reveal", nickname: me() }));
+});
+document.getElementById("newgame-btn").addEventListener("click", () => {
+  if (ws) ws.send(JSON.stringify({ type: "newGame", nickname: me() }));
 });
 
 loadPuzzleOptions();

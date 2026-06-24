@@ -158,6 +158,27 @@ public class RoomSocketHandler extends TextWebSocketHandler {
                     broadcast(code, Map.of("type", "hint", "text", text, "count", n, "max", 3));
                 }
             }
+            case "newGame" -> {
+                String nick = str(msg.get("nickname"));
+                if (room.isAiHosted()) {
+                    String prev = room.getTitle();
+                    Puzzle p = rooms.randomPuzzle().orElse(null);
+                    for (int i = 0; i < 5 && p != null && p.getTitle().equals(prev); i++) {
+                        p = rooms.randomPuzzle().orElse(p);
+                    }
+                    if (p == null) return;
+                    room.reset();
+                    room.setPuzzle(p.getTitle(), p.getScenario(), p.getSolution());
+                    broadcast(code, Map.of("type", "newgame"));
+                    broadcast(code, Map.of("type", "system", "text", "🔄 새 게임! 새 문제가 나왔어요."));
+                    broadcast(code, Map.of("type", "puzzle", "title", p.getTitle(), "scenario", p.getScenario()));
+                } else {
+                    if (!room.isHost(nick)) return;
+                    room.reset();
+                    broadcast(code, Map.of("type", "newgame"));
+                    broadcast(code, Map.of("type", "system", "text", "🔄 출제자가 새 문제를 준비합니다."));
+                }
+            }
             default -> { }
         }
     }

@@ -33,14 +33,16 @@ public class RoomService {
         Room room = new Room(code, hostName);
         if (aiHosted) {
             room.setAiHosted(true);
-            List<Puzzle> all = puzzles.findAll();
-            if (!all.isEmpty()) {
-                Puzzle p = all.get(random.nextInt(all.size()));
-                room.setPuzzle(p.getTitle(), p.getScenario(), p.getSolution());
-            }
+            randomPuzzle().ifPresent(p -> room.setPuzzle(p.getTitle(), p.getScenario(), p.getSolution()));
         }
         rooms.put(code, room);
         return room;
+    }
+
+    public Optional<Puzzle> randomPuzzle() {
+        List<Puzzle> all = puzzles.findAll();
+        if (all.isEmpty()) return Optional.empty();
+        return Optional.of(all.get(random.nextInt(all.size())));
     }
 
     public Room get(String code) {

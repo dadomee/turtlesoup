@@ -89,11 +89,11 @@
               </div>
             </div>
 
-            <div class="card">
+            <div class="card chat-card">
               <div id="room-log" class="chat-log"></div>
 
               <div id="participant-composer" class="composer hidden">
-                <input type="text" id="room-input" placeholder="잡담은 그냥 입력 · 질문은 /질문 으로 (예: /질문 사람이 죽었나요?)">
+                <input type="text" id="room-input" placeholder="잡담은 그냥 입력 · 질문은 '/' 만 치면 돼요 (예: 사람이 죽었나요?)">
                 <button id="room-send">전송</button>
               </div>
 
@@ -115,6 +115,11 @@
                   <input type="text" id="hint-input" placeholder="힌트를 입력해 참가자에게 공개">
                   <button id="hint-send" style="white-space:nowrap;">💡 힌트 주기 (<span id="hint-count">0</span>/3)</button>
                 </div>
+              </div>
+
+              <div id="end-actions" class="hidden" style="margin-top:12px; padding-top:12px; border-top:1px solid var(--border); display:flex; gap:8px; flex-wrap:wrap;">
+                <button id="newgame-btn">🔄 새 게임</button>
+                <button class="ghost" onclick="leaveRoom()">🚪 나가기</button>
               </div>
             </div>
           </div>

@@ -174,10 +174,27 @@ select { cursor: pointer; }
 
 /* 문제(상황) 카드는 채팅이 길어져도 상단에 고정 — 맨 위 문제가 안 가려지게 */
 .room-puzzle {
-  position: sticky; top: 0; z-index: 5;
+  flex-shrink: 0;
   max-height: 42vh; overflow-y: auto;
   box-shadow: 0 3px 10px rgba(0,0,0,0.07);
 }
+
+/* 방 입장 중: 페이지 전체 대신 채팅 영역(#room-log)만 내부 스크롤 */
+body.in-room .content { overflow: hidden; }
+body.in-room .content-narrow { height: 100%; display: flex; flex-direction: column; min-height: 0; }
+body.in-room #room-view { flex: 1; display: flex; flex-direction: column; min-height: 0; }
+body.in-room .chat-card { flex: 1; display: flex; flex-direction: column; min-height: 0; margin-bottom: 0; }
+body.in-room #room-log { flex: 1; overflow-y: auto; min-height: 0; }
+
+/* 토스트(비차단 알림) */
+.toast {
+  position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%);
+  background: var(--rail); color: #fff; font-size: 13px; line-height: 1.5;
+  padding: 10px 16px; border-radius: 8px; max-width: 86%; z-index: 9998;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.25); text-align: center;
+  opacity: 0; pointer-events: none; transition: opacity .2s ease;
+}
+.toast.show { opacity: 1; }
 
 /* ===== 보스키 힌트 / 오버레이 (boss.js가 주입) ===== */
 .boss-hint {

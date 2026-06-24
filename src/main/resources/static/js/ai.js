@@ -10,6 +10,7 @@ let hintsUsed = 0;
 // 대화 저장: 문제별 localStorage (목록 갔다 와도/새로고침해도 복원)
 let convoKey = null;
 let convo = null; // { entries:[...], questionCount, hintsUsed, solved }
+let aborter = null; // 진행 중인 AI 요청 취소용 (문제 나가기/전환 시)
 
 const VERDICT_LABEL = {
   YES: "예",
@@ -71,6 +72,7 @@ async function loadList() {
 }
 
 async function openPuzzle(id) {
+  if (aborter) { aborter.abort(); aborter = null; }   // 이전 문제의 미완료 요청 취소
   const res = await fetch(`/api/puzzles/${id}`);
   if (!res.ok) { alert("문제를 불러오지 못했습니다."); return; }
   const p = await res.json();
@@ -85,11 +87,11 @@ async function openPuzzle(id) {
 
   const saved = loadConvo(id);
   if (saved && Array.isArray(saved.entries) && saved.entries.length) {
-    // 저장된 대화 복원
+    // 저장된 대화 복원 — 카운트는 엔트리에서 직접 세어 어긋남 방지(힌트 계속 되는 버그 차단)
     convo = { entries: saved.entries };
-    questionCount = saved.questionCount || 0;
-    hintsUsed = saved.hintsUsed || 0;
-    solved = !!saved.solved;
+    hintsUsed = saved.entries.filter(e => e.kind === "hint").length;
+    questionCount = saved.entries.filter(e => e.kind === "my").length;
+    solved = !!saved.solved || saved.entries.some(e => e.kind === "solution");
     saved.entries.forEach(renderEntry);
   } else {
     // 새 대화
@@ -169,11 +171,13 @@ async function ask() {
   questionCount += 1;
   document.getElementById("q-count").textContent = String(questionCount);
 
+  aborter = new AbortController();
   try {
     const res = await fetch(`/api/ai/${currentPuzzleId}/ask`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ question: q })
+      body: JSON.stringify({ question: q }),
+      signal: aborter.signal
     });
     if (!res.ok) {
       appendBotText("답변을 가져오지 못했습니다. (Ollama가 켜져 있는지 확인하세요)");
@@ -191,6 +195,7 @@ async function ask() {
       recordSolve();
     }
   } catch (e) {
+    if (e.name === "AbortError") return;   // 문제 나감/전환으로 취소된 요청은 무시
     appendBotText("서버에 연결하지 못했습니다. 잠시 후 다시 시도해 주세요.");
   } finally {
     asking = false;
@@ -251,14 +256,16 @@ async function useHint() {
   const hintBtn = document.getElementById("hint-btn");
   const next = hintsUsed + 1;
   hintBtn.disabled = true;
+  aborter = new AbortController();
   try {
-    const res = await fetch(`/api/ai/${currentPuzzleId}/hint/${next}`, { method: "POST" });
+    const res = await fetch(`/api/ai/${currentPuzzleId}/hint/${next}`, { method: "POST", signal: aborter.signal });
     if (!res.ok) { appendBotText("힌트를 가져오지 못했습니다. (Ollama가 켜져 있는지 확인하세요)"); return; }
     const data = await res.json();
     hintsUsed = next;
     appendBotHint(data.hint, next);
     document.getElementById("hint-n").textContent = String(hintsUsed);
   } catch (e) {
+    if (e.name === "AbortError") return;   // 취소된 요청은 무시
     appendBotText("힌트 요청 중 오류가 발생했습니다.");
   } finally {
     if (!solved && hintsUsed < 3) hintBtn.disabled = false;
@@ -280,6 +287,7 @@ async function recordSolve() {
 }
 
 function showList() {
+  if (aborter) { aborter.abort(); aborter = null; }   // 목록으로 나가면 진행 중 요청 취소
   playView.classList.add("hidden");
   listView.classList.remove("hidden");
 }
