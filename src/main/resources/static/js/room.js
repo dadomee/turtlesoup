@@ -64,7 +64,7 @@ function connectWs(code) {
 }
 function restoreEnterRoom(code, hasPuzzle) {
   myCode = code;
-  hintShown = 0;
+  resetRoomControls();
   document.getElementById("room-code-badge").textContent = "방 코드: " + code;
   document.getElementById("room-log").textContent = "";
   ["host-solution", "participant-composer", "host-controls", "ai-hint-bar", "puzzle-picker", "end-actions"]
@@ -160,7 +160,7 @@ function enterRoom(code) {
   myCode = code;
   roomLog = [];
   roomEnded = false;
-  hintShown = 0;
+  resetRoomControls();
   document.getElementById("room-code-badge").textContent = "방 코드: " + code;
   document.getElementById("room-log").textContent = "";
   ["host-solution", "participant-composer", "host-controls", "ai-hint-bar", "puzzle-picker", "end-actions"]
@@ -339,6 +339,14 @@ function setHintCount(count) {
     const ab = document.getElementById("ai-hint-btn");
     if (ab && !roomEnded) ab.disabled = false;
   }
+}
+
+// 방 진입/복원 시 힌트 카운트·버튼 상태를 깨끗이 초기화 (이전 방 값 누적 방지)
+function resetRoomControls() {
+  hintShown = 0;
+  ["hint-count", "ai-hint-count"].forEach(id => { const el = document.getElementById(id); if (el) el.textContent = "0"; });
+  ["room-input", "room-send", "hint-input", "hint-send", "ai-hint-btn", "ai-reveal-btn"].forEach(id => { const el = document.getElementById(id); if (el) el.disabled = false; });
+  document.querySelectorAll("#host-controls button").forEach(b => b.disabled = false);
 }
 
 function endGame() {
