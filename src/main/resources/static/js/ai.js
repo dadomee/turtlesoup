@@ -180,7 +180,7 @@ async function ask() {
       signal: aborter.signal
     });
     if (!res.ok) {
-      appendBotText("답변을 가져오지 못했습니다. (Ollama가 켜져 있는지 확인하세요)");
+      appendBotText("AI 응답을 가져오지 못했어요. 잠시 후 다시 시도해 주세요.");
       return;
     }
     const data = await res.json();
@@ -259,7 +259,7 @@ async function useHint() {
   aborter = new AbortController();
   try {
     const res = await fetch(`/api/ai/${currentPuzzleId}/hint/${next}`, { method: "POST", signal: aborter.signal });
-    if (!res.ok) { appendBotText("힌트를 가져오지 못했습니다. (Ollama가 켜져 있는지 확인하세요)"); return; }
+    if (!res.ok) { appendBotText("AI 힌트를 가져오지 못했어요. 잠시 후 다시 시도해 주세요."); return; }
     const data = await res.json();
     hintsUsed = next;
     appendBotHint(data.hint, next);
