@@ -180,7 +180,7 @@ async function ask() {
       signal: aborter.signal
     });
     if (res.status === 429) {
-      appendBotText("🤖 AI가 지금 열일 중~ 질문이 몰렸어요! 1분에 20번까지만 받아요. 잠깐 쉬었다 다시 물어봐 줘 ><");
+      appendBotText(await busyMessage(res, "🤖 AI가 잠깐 바빠요! 🫧 조금 이따 다시 물어봐 주세요 🐢"));
       return;
     }
     if (!res.ok) {
@@ -255,6 +255,15 @@ function renderBotHint(text, n) {
 }
 function appendBotHint(text, n) { pushEntry({ kind: "hint", text, n }); }
 
+// 429 본문에 담긴 서버의 상황별 귀여운 문구(분당/일일)를 꺼낸다. 못 읽으면 fallback.
+async function busyMessage(res, fallback) {
+  try {
+    const data = await res.json();
+    if (data && data.error) return data.error;
+  } catch (_) { /* 본문 파싱 실패는 무시 */ }
+  return fallback;
+}
+
 async function useHint() {
   if (solved || hintsUsed >= 3) return;
   const hintBtn = document.getElementById("hint-btn");
@@ -263,7 +272,7 @@ async function useHint() {
   aborter = new AbortController();
   try {
     const res = await fetch(`/api/ai/${currentPuzzleId}/hint/${next}`, { method: "POST", signal: aborter.signal });
-    if (res.status === 429) { appendBotText("🤖 AI가 열일 중~ 힌트가 몰렸어요! 잠깐 후 다시 눌러줘 (힌트는 안 차감됐어요) ><"); return; }
+    if (res.status === 429) { appendBotText(await busyMessage(res, "🤖 AI가 잠깐 바빠요! 🫧 조금 이따 다시 눌러 주세요 (힌트는 안 차감됐어요) 🐢")); return; }
     if (!res.ok) { appendBotText("AI 힌트를 가져오지 못했어요. 잠시 후 다시 시도해 주세요."); return; }
     const data = await res.json();
     hintsUsed = next;

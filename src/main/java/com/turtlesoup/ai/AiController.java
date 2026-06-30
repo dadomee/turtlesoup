@@ -35,4 +35,11 @@ public class AiController {
     public Map<String, String> handleNotFound(PuzzleNotFoundException ex) {
         return Map.of("error", ex.getMessage());
     }
+
+    // 레이트리밋: 상황별(분당/일일) 귀여운 문구를 429 본문으로 내려 프런트가 그대로 보여준다.
+    @ResponseStatus(HttpStatus.TOO_MANY_REQUESTS)
+    @ExceptionHandler(AiBusyException.class)
+    public Map<String, String> handleBusy(AiBusyException ex) {
+        return Map.of("error", ex.getMessage(), "scope", ex.getScope().name());
+    }
 }

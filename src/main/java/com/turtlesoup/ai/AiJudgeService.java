@@ -111,25 +111,39 @@ public class AiJudgeService {
                 .call()
                 .content();
         } catch (Exception e) {
-            if (isRateLimit(e)) throw new AiBusyException();
+            RateLimitScope scope = classifyRateLimit(e);
+            if (scope != null) throw new AiBusyException(AiBusyException.Context.ASK, scope);
             throw e;
         }
         return extractVerdict(raw);
     }
 
-    // Gemini/OpenAI 레이트리밋(429/quota/RESOURCE_EXHAUSTED) 여부를 원인 체인에서 탐지
-    private boolean isRateLimit(Throwable e) {
+    // 예외 원인 체인에서 레이트리밋(429/quota/RESOURCE_EXHAUSTED)인지, 그렇다면 분당/일일 중 무엇인지 판별.
+    // 레이트리밋이 아니면 null. 메트릭명이 분·일 모두 "free_tier_requests"를 포함할 수 있어
+    // 분당(perMinute)을 먼저 본 뒤 일일을 판정한다.
+    static RateLimitScope classifyRateLimit(Throwable e) {
+        boolean rateLimited = false;
+        StringBuilder buf = new StringBuilder();
         for (Throwable c = e; c != null; c = c.getCause()) {
             String m = c.getMessage();
-            if (m != null) {
-                String lm = m.toLowerCase();
-                if (m.contains("429") || lm.contains("resource_exhausted")
-                        || lm.contains("quota") || lm.contains("rate limit") || lm.contains("exceeded")) {
-                    return true;
-                }
+            if (m == null) continue;
+            String lm = m.toLowerCase();
+            buf.append(' ').append(lm);
+            if (m.contains("429") || lm.contains("resource_exhausted")
+                    || lm.contains("quota") || lm.contains("rate limit") || lm.contains("exceeded")) {
+                rateLimited = true;
             }
         }
-        return false;
+        if (!rateLimited) return null;
+        String all = buf.toString();
+        if (all.contains("perminute") || all.contains("per minute") || all.contains("per_minute")) {
+            return RateLimitScope.PER_MINUTE;
+        }
+        if (all.contains("perday") || all.contains("per day") || all.contains("per_day")
+                || all.contains("free_tier_requests")) {   // 무료 일일 요청 메트릭
+            return RateLimitScope.PER_DAY;
+        }
+        return RateLimitScope.UNKNOWN;
     }
 
     // 모델이 {"근거":...,"판정":"예"} 형태로 답하면 '판정'만 추출해 파싱.
@@ -155,7 +169,8 @@ public class AiJudgeService {
                 .call()
                 .content();
         } catch (Exception e) {
-            if (isRateLimit(e)) throw new AiBusyException();
+            RateLimitScope scope = classifyRateLimit(e);
+            if (scope != null) throw new AiBusyException(AiBusyException.Context.HINT, scope);
             throw e;
         }
     }

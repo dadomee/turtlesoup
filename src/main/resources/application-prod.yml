@@ -8,7 +8,8 @@ spring:
       chat:
         completions-path: /chat/completions
         options:
-          model: ${GEMINI_MODEL:gemini-2.0-flash}
+          model: ${GEMINI_MODEL:gemini-2.5-flash}   # lite는 빠르지만 무료 일일한도 20 → flash로 (한도 큼)
+          reasoning-effort: none                     # 2.5 flash의 thinking(추론) OFF = lite급 속도 + flash 한도 유지
           temperature: 0.2
   # datasource는 환경변수로 주입 (Neon Postgres):
   #   SPRING_DATASOURCE_URL=jdbc:postgresql://<host>/<db>?sslmode=require
