@@ -2,16 +2,14 @@ spring:
   profiles:
     active: local
   ai:
-    ollama:
-      base-url: http://localhost:11434
-      chat:
-        options:
-          model: qwen2.5:7b
-          temperature: 0.2
-          repeat-penalty: 1.1
-          num-predict: 120
-          keep-alive: 10m
-      init:
-        pull-model-strategy: never
+    model:
+      # 채팅만 사용 — 나머지 모델 자동설정(특히 OpenAI speech/embedding/image)이
+      # API 키를 요구하다 부팅 실패하지 않도록 전부 비활성화. chat은 프로필별로 선택.
+      embedding: none
+      image: none
+      moderation: none
+      audio:
+        speech: none
+        transcription: none
 server:
-  port: 8080
+  port: ${PORT:8080}    # 배포 플랫폼(Koyeb 등)은 PORT 환경변수로 포트를 줌

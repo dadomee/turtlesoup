@@ -1,0 +1,25 @@
+spring:
+  ai:
+    model:
+      chat: openai            # 배포: OpenAI 스타터를 Gemini OpenAI-호환 엔드포인트로 사용
+    openai:
+      api-key: ${GEMINI_API_KEY}
+      base-url: https://generativelanguage.googleapis.com/v1beta/openai
+      chat:
+        completions-path: /chat/completions
+        options:
+          model: ${GEMINI_MODEL:gemini-2.0-flash}
+          temperature: 0.2
+  # datasource는 환경변수로 주입 (Neon Postgres):
+  #   SPRING_DATASOURCE_URL=jdbc:postgresql://<host>/<db>?sslmode=require
+  #   SPRING_DATASOURCE_USERNAME / SPRING_DATASOURCE_PASSWORD
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: update        # 첫 기동 시 테이블 생성, 이후 유지 (PuzzleSeeder가 비어있을 때만 시드)
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+  h2:
+    console:
+      enabled: false          # 운영에서는 H2 콘솔 비활성

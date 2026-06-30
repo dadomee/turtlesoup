@@ -1,4 +1,18 @@
 spring:
+  ai:
+    model:
+      chat: ollama          # 로컬은 Ollama 사용 (OpenAI 자동설정은 비활성)
+    ollama:
+      base-url: http://localhost:11434
+      chat:
+        options:
+          model: qwen2.5:7b
+          temperature: 0.2
+          repeat-penalty: 1.1
+          num-predict: 120
+          keep-alive: 10m
+      init:
+        pull-model-strategy: never
   datasource:
     url: jdbc:h2:mem:turtlesoup;DB_CLOSE_DELAY=-1
     driver-class-name: org.h2.Driver
