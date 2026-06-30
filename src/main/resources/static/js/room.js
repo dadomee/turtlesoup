@@ -65,7 +65,7 @@ function connectWs(code) {
 function restoreEnterRoom(code, hasPuzzle) {
   myCode = code;
   resetRoomControls();
-  document.getElementById("room-code-badge").textContent = "방 코드: " + code;
+  document.getElementById("room-code-badge").textContent = "방 코드: " + code + " 📋";
   document.getElementById("room-log").textContent = "";
   ["host-solution", "participant-composer", "host-controls", "ai-hint-bar", "puzzle-picker", "end-actions"]
     .forEach(id => document.getElementById(id).classList.add("hidden"));
@@ -161,7 +161,7 @@ function enterRoom(code) {
   roomLog = [];
   roomEnded = false;
   resetRoomControls();
-  document.getElementById("room-code-badge").textContent = "방 코드: " + code;
+  document.getElementById("room-code-badge").textContent = "방 코드: " + code + " 📋";
   document.getElementById("room-log").textContent = "";
   ["host-solution", "participant-composer", "host-controls", "ai-hint-bar", "puzzle-picker", "end-actions"]
     .forEach(id => document.getElementById(id).classList.add("hidden"));
@@ -464,6 +464,18 @@ document.getElementById("ai-reveal-btn").addEventListener("click", () => {
 });
 document.getElementById("newgame-btn").addEventListener("click", () => {
   if (ws) ws.send(JSON.stringify({ type: "newGame", nickname: me() }));
+});
+
+// 방 코드 뱃지 클릭 → 클립보드 복사 (친구 공유용)
+document.getElementById("room-code-badge").addEventListener("click", () => {
+  if (!myCode) return;
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(myCode)
+      .then(() => toast("방 코드 " + myCode + " 복사됨! 친구에게 붙여넣기 📋"))
+      .catch(() => toast("복사 실패 — 코드: " + myCode));
+  } else {
+    toast("복사 미지원 환경 — 코드: " + myCode);   // http LAN 등 비보안 컨텍스트
+  }
 });
 
 loadPuzzleOptions();
