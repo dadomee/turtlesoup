@@ -103,12 +103,33 @@ public class AiJudgeService {
 
     public Verdict judge(String scenario, String solution, String question) {
         String system = String.format(SYSTEM_PROMPT, scenario, solution);
-        String raw = chatClient.prompt()
-            .system(system)
-            .user("[플레이어 입력] " + question)
-            .call()
-            .content();
+        String raw;
+        try {
+            raw = chatClient.prompt()
+                .system(system)
+                .user("[플레이어 입력] " + question)
+                .call()
+                .content();
+        } catch (Exception e) {
+            if (isRateLimit(e)) throw new AiBusyException();
+            throw e;
+        }
         return extractVerdict(raw);
+    }
+
+    // Gemini/OpenAI 레이트리밋(429/quota/RESOURCE_EXHAUSTED) 여부를 원인 체인에서 탐지
+    private boolean isRateLimit(Throwable e) {
+        for (Throwable c = e; c != null; c = c.getCause()) {
+            String m = c.getMessage();
+            if (m != null) {
+                String lm = m.toLowerCase();
+                if (m.contains("429") || lm.contains("resource_exhausted")
+                        || lm.contains("quota") || lm.contains("rate limit") || lm.contains("exceeded")) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     // 모델이 {"근거":...,"판정":"예"} 형태로 답하면 '판정'만 추출해 파싱.
@@ -127,10 +148,15 @@ public class AiJudgeService {
 
     public String hint(String scenario, String solution, int n) {
         String system = String.format(HINT_PROMPT, n, scenario, solution);
-        return chatClient.prompt()
-            .system(system)
-            .user("힌트를 주세요.")
-            .call()
-            .content();
+        try {
+            return chatClient.prompt()
+                .system(system)
+                .user("힌트를 주세요.")
+                .call()
+                .content();
+        } catch (Exception e) {
+            if (isRateLimit(e)) throw new AiBusyException();
+            throw e;
+        }
     }
 }

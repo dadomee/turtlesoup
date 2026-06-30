@@ -1,6 +1,7 @@
 package com.turtlesoup.room;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.turtlesoup.ai.AiBusyException;
 import com.turtlesoup.ai.AiJudgeService;
 import com.turtlesoup.ai.Verdict;
 import com.turtlesoup.puzzle.Puzzle;
@@ -107,12 +108,18 @@ public class RoomSocketHandler extends TextWebSocketHandler {
                     final String solution = room.getSolution();
                     final String q = str(msg.get("text"));
                     aiPool.submit(() -> {
-                        Verdict v = ai.judge(scenario, solution, q);
-                        broadcast(code, Map.of("type", "answer", "verdict", v.name()));
-                        if (v == Verdict.CORRECT) {
-                            room.end();
-                            broadcast(code, Map.of("type", "system", "text", "🎉 정답입니다! 해설을 공개해요."));
-                            broadcast(code, Map.of("type", "reveal", "solution", solution, "ended", true));
+                        try {
+                            Verdict v = ai.judge(scenario, solution, q);
+                            broadcast(code, Map.of("type", "answer", "verdict", v.name()));
+                            if (v == Verdict.CORRECT) {
+                                room.end();
+                                broadcast(code, Map.of("type", "system", "text", "🎉 정답입니다! 해설을 공개해요."));
+                                broadcast(code, Map.of("type", "reveal", "solution", solution, "ended", true));
+                            }
+                        } catch (AiBusyException be) {
+                            broadcast(code, Map.of("type", "system", "text", "🤖 AI가 열일 중~ 질문이 몰렸어요! 1분에 20번만 받아요. 잠깐 후 다시 물어봐 줘 ><"));
+                        } catch (Exception e) {
+                            broadcast(code, Map.of("type", "system", "text", "AI 응답을 가져오지 못했어요. 잠시 후 다시 시도해 주세요."));
                         }
                     });
                 }
@@ -147,8 +154,14 @@ public class RoomSocketHandler extends TextWebSocketHandler {
                     final String scenario = room.getScenario();
                     final String solution = room.getSolution();
                     aiPool.submit(() -> {
-                        String text = ai.hint(scenario, solution, n);
-                        broadcast(code, Map.of("type", "hint", "text", text, "count", n, "max", 3));
+                        try {
+                            String text = ai.hint(scenario, solution, n);
+                            broadcast(code, Map.of("type", "hint", "text", text, "count", n, "max", 3));
+                        } catch (AiBusyException be) {
+                            broadcast(code, Map.of("type", "system", "text", "🤖 AI가 열일 중~ 힌트가 몰렸어요! 잠깐 후 다시 ><"));
+                        } catch (Exception e) {
+                            broadcast(code, Map.of("type", "system", "text", "힌트를 가져오지 못했어요. 잠시 후 다시 시도해 주세요."));
+                        }
                     });
                 } else {
                     String nick = str(msg.get("nickname"));

@@ -179,6 +179,10 @@ async function ask() {
       body: JSON.stringify({ question: q }),
       signal: aborter.signal
     });
+    if (res.status === 429) {
+      appendBotText("🤖 AI가 지금 열일 중~ 질문이 몰렸어요! 1분에 20번까지만 받아요. 잠깐 쉬었다 다시 물어봐 줘 ><");
+      return;
+    }
     if (!res.ok) {
       appendBotText("AI 응답을 가져오지 못했어요. 잠시 후 다시 시도해 주세요.");
       return;
@@ -259,6 +263,7 @@ async function useHint() {
   aborter = new AbortController();
   try {
     const res = await fetch(`/api/ai/${currentPuzzleId}/hint/${next}`, { method: "POST", signal: aborter.signal });
+    if (res.status === 429) { appendBotText("🤖 AI가 열일 중~ 힌트가 몰렸어요! 잠깐 후 다시 눌러줘 (힌트는 안 차감됐어요) ><"); return; }
     if (!res.ok) { appendBotText("AI 힌트를 가져오지 못했어요. 잠시 후 다시 시도해 주세요."); return; }
     const data = await res.json();
     hintsUsed = next;
