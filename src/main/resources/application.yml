@@ -11,5 +11,12 @@ spring:
       audio:
         speech: none
         transcription: none
+  # 정적 파일(JS/CSS/HTML)에 Cache-Control: no-cache → 브라우저가 매번 재검증(Last-Modified로 304,
+  # 바뀌면 즉시 새 버전). 배포 후에도 삼성인터넷 등이 옛날 캐시를 계속 보여주던 문제 방지.
+  web:
+    resources:
+      cache:
+        cachecontrol:
+          no-cache: true
 server:
   port: ${PORT:8080}    # 배포 플랫폼(Koyeb 등)은 PORT 환경변수로 포트를 줌
