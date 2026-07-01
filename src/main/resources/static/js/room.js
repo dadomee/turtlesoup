@@ -521,6 +521,22 @@ document.getElementById("room-code-badge").addEventListener("click", () => {
   }
 });
 
+// 채팅이 '거의 맨 아래'인지 추적 → 키보드로 보이는 높이가 바뀔 때 최신 메시지를 계속 노출
+let roomAtBottom = true;
+(function () {
+  const log = document.getElementById("room-log");
+  if (log) log.addEventListener("scroll", () => {
+    roomAtBottom = (log.scrollHeight - log.scrollTop - log.clientHeight) < 80;
+  });
+})();
+if (window.visualViewport) {
+  window.visualViewport.addEventListener("resize", () => {
+    if (!roomAtBottom) return;                 // 위로 올려 읽는 중이면 건드리지 않음
+    const log = document.getElementById("room-log");
+    if (log) requestAnimationFrame(() => { log.scrollTop = log.scrollHeight; });
+  });
+}
+
 // 카톡 등 딴 앱 갔다 돌아오면(모바일이 백그라운드에서 소켓을 끊음) 죽은 연결을 즉시 복구
 document.addEventListener("visibilitychange", () => {
   if (document.visibilityState !== "visible" || !myCode || wsIntentClose) return;

@@ -186,15 +186,14 @@ select { cursor: pointer; }
   box-shadow: 0 3px 10px rgba(0,0,0,0.07);
 }
 
-/* 방 입장 중: 페이지 전체 대신 채팅 영역(#room-log)만 내부 스크롤 (데스크톱 전용)
-   ※ 모바일은 키보드가 올라올 때 입력칸이 가려지지 않도록 일반 페이지 스크롤을 유지한다 */
-@media (min-width: 761px) {
-  body.in-room .content { overflow: hidden; }
-  body.in-room .content-narrow { height: 100%; display: flex; flex-direction: column; min-height: 0; }
-  body.in-room #room-view { flex: 1; display: flex; flex-direction: column; min-height: 0; }
-  body.in-room .chat-card { flex: 1; display: flex; flex-direction: column; min-height: 0; margin-bottom: 0; }
-  body.in-room #room-log { flex: 1; overflow-y: auto; min-height: 0; }
-}
+/* 방 입장 중: 페이지 전체가 아니라 채팅 영역(#room-log)만 내부 스크롤 →
+   문제=상단 고정, 채팅=가운데 스크롤(새 메시지 자동 맨아래), 입력=하단 고정.
+   모바일도 동일 — 앱 높이를 visualViewport에 맞춰(shell.js) 입력창이 키보드 위에 오므로 안전. */
+body.in-room .content { overflow: hidden; }
+body.in-room .content-narrow { height: 100%; display: flex; flex-direction: column; min-height: 0; }
+body.in-room #room-view { flex: 1; display: flex; flex-direction: column; min-height: 0; }
+body.in-room .chat-card { flex: 1; display: flex; flex-direction: column; min-height: 0; margin-bottom: 0; }
+body.in-room #room-log { flex: 1; overflow-y: auto; min-height: 0; }
 
 /* 토스트(비차단 알림) */
 .toast {
@@ -251,6 +250,6 @@ select { cursor: pointer; }
   /* 보스 버튼: 상단(고정된 문제)·하단(전송/정답 버튼) 둘 다 피해 화면 중앙-오른쪽으로
      (스크롤되는 채팅 영역이라 가릴 게 거의 없음) */
   .boss-hint { top: 50%; right: 6px; bottom: auto; transform: translateY(-50%); font-size: 11px; padding: 5px 9px; opacity: .85; }
-  /* 문제(상황) 카드를 상단에 고정 — 채팅이 길어져도 질문이 안 사라지게 (모바일) */
-  .room-puzzle { position: sticky; top: 0; z-index: 5; max-height: 34vh; }
+  /* 문제 카드는 위 body.in-room flex 규칙이 상단에 고정 — 모바일에선 높이만 낮게 */
+  .room-puzzle { max-height: 34vh; }
 }
