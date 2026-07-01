@@ -247,9 +247,8 @@ body.in-room #room-log { flex: 1; overflow-y: auto; min-height: 0; }
   /* 보스 오버레이(Outlook): 모바일에선 폴더·본문 접고 메일 목록만 전체폭 */
   .ob-folders, .ob-pane { display: none; }
   .ob-list { width: 100%; border-right: none; }
-  /* 보스 버튼: 상단(고정된 문제)·하단(전송/정답 버튼) 둘 다 피해 화면 중앙-오른쪽으로
-     (스크롤되는 채팅 영역이라 가릴 게 거의 없음) */
-  .boss-hint { top: 50%; right: 6px; bottom: auto; transform: translateY(-50%); font-size: 11px; padding: 5px 9px; opacity: .85; }
+  /* 모바일에선 보스 버튼 숨김 — 작은 화면에서 자꾸 겹치고 거슬려서 제거 (보스키는 데스크톱 ` 키 전용) */
+  .boss-hint { display: none; }
   /* 좁은 화면에서 문제 카드가 채팅을 다 밀어내지 않게:
      공간 부족하면 문제 카드가 줄어들고(내부 스크롤), 채팅(#room-log)엔 최소 높이를 보장 */
   .room-puzzle { flex-shrink: 1; min-height: 0; max-height: 40%; }
