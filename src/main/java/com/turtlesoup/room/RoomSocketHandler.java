@@ -153,18 +153,9 @@ public class RoomSocketHandler extends TextWebSocketHandler {
                     int n = room.useHint();
                     broadcast(code, Map.of("type", "system",
                         "text", (nick.isBlank() ? "누군가" : nick) + "님이 힌트를 요청했어요 💡 (" + n + "/3)"));
-                    final String scenario = room.getScenario();
-                    final String solution = room.getSolution();
-                    aiPool.submit(() -> {
-                        try {
-                            String text = ai.hint(scenario, solution, n);
-                            broadcast(code, Map.of("type", "hint", "text", text, "count", n, "max", 3));
-                        } catch (AiBusyException be) {
-                            broadcast(code, Map.of("type", "system", "text", be.getMessage()));
-                        } catch (Exception e) {
-                            broadcast(code, Map.of("type", "system", "text", "힌트를 가져오지 못했어요. 잠시 후 다시 시도해 주세요."));
-                        }
-                    });
+                    String text = room.getHint(n);   // 사전작성 힌트 — LLM 호출 없이 즉시
+                    if (text == null || text.isBlank()) text = "이 문제엔 힌트가 준비돼 있지 않아요. 조금만 더 추리해 봐요!";
+                    broadcast(code, Map.of("type", "hint", "text", text, "count", n, "max", 3));
                 } else {
                     String nick = str(msg.get("nickname"));
                     if (!room.isHost(nick)) return;
@@ -184,7 +175,8 @@ public class RoomSocketHandler extends TextWebSocketHandler {
                     }
                     if (p == null) return;
                     room.reset();
-                    room.setPuzzle(p.getTitle(), p.getScenario(), p.getSolution());
+                    room.setPuzzle(p.getTitle(), p.getScenario(), p.getSolution(),
+                        p.getHint(1), p.getHint(2), p.getHint(3));
                     broadcast(code, Map.of("type", "newgame"));
                     broadcast(code, Map.of("type", "system", "text", "🔄 새 게임! 새 문제가 나왔어요."));
                     broadcast(code, Map.of("type", "puzzle", "title", p.getTitle(), "scenario", p.getScenario()));

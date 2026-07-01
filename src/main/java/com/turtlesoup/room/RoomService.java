@@ -33,7 +33,8 @@ public class RoomService {
         Room room = new Room(code, hostName);
         if (aiHosted) {
             room.setAiHosted(true);
-            randomPuzzle().ifPresent(p -> room.setPuzzle(p.getTitle(), p.getScenario(), p.getSolution()));
+            randomPuzzle().ifPresent(p -> room.setPuzzle(p.getTitle(), p.getScenario(), p.getSolution(),
+                    p.getHint(1), p.getHint(2), p.getHint(3)));
         }
         rooms.put(code, room);
         return room;

@@ -12,33 +12,6 @@ import java.util.regex.Pattern;
 @Service
 public class AiJudgeService {
 
-    private static final String HINT_PROMPT = """
-        당신은 '바다거북스프'(수평적 사고 추리 게임)의 출제자입니다.
-        아래 [문제]와 [정답]을 알고 있습니다. 플레이어에게 도움이 될 힌트를 딱 하나만 주세요.
-
-        힌트 단계는 %d/3입니다. 단계가 올라갈수록 더 구체적으로 좁혀 주세요.
-        - 1단계: 어디에 주목해야 할지 방향만 살짝 (관점·주제 환기). 거의 알려주지 마세요.
-        - 2단계: 핵심 요소를 조금 더 구체적으로 좁혀 주세요.
-        - 3단계(마지막): 정답 직전까지 강하게 좁혀 주되, 진상(정답)을 절대 직접 말하지 마세요. 마지막 한 걸음은 플레이어 몫으로 남기세요.
-
-        좋은 힌트 예시(다른 문제 기준):
-        [예시 정답] 남자는 멈추지 않는 딸꾹질 때문에 물을 청했고, 바텐더가 총으로 놀래켜 멈추게 해줬다.
-        - 1단계: "남자가 진짜 원한 건 '물' 그 자체가 아니었어요. 그가 겪던 곤란에 주목하세요."
-        - 2단계: "그 곤란은 갑작스럽고 본인 의지로는 잘 멈추지 않는 종류였어요."
-        - 3단계: "바텐더는 위협한 게 아니라 남자를 '깜짝' 도와준 거예요. 그 충격이 곤란을 단번에 끝냈죠."
-
-        규칙:
-        - 반드시 한국어로만 작성하세요. 중국어·영어 등 다른 언어 글자를 절대 섞지 마세요.
-        - 힌트 한두 문장만 출력하세요. "힌트:" 같은 접두어나 군더더기를 붙이지 마세요.
-        - 어떤 단계에서도 정답(진상)을 그대로 말하지 마세요.
-
-        [문제]
-        %s
-
-        [정답]
-        %s
-        """;
-
     private static final String SYSTEM_PROMPT = """
         당신은 '바다거북스프'(수평적 사고 추리 게임)의 출제자입니다.
         당신만 [정답](사건의 진상)을 알고, 플레이어는 예/아니오 질문으로 진상을 좁혀 갑니다.
@@ -155,23 +128,8 @@ public class AiJudgeService {
         return VerdictParser.parse(raw);
     }
 
+    // 힌트는 사전작성(PuzzleSeeder의 hint1/2/3)을 그대로 사용 — LLM 호출 없음(레이트리밋·지연 없음, 품질 일정).
     public String hint(Long puzzleId, int n) {
-        Puzzle p = find(puzzleId);
-        return hint(p.getScenario(), p.getSolution(), n);
-    }
-
-    public String hint(String scenario, String solution, int n) {
-        String system = String.format(HINT_PROMPT, n, scenario, solution);
-        try {
-            return chatClient.prompt()
-                .system(system)
-                .user("힌트를 주세요.")
-                .call()
-                .content();
-        } catch (Exception e) {
-            RateLimitScope scope = classifyRateLimit(e);
-            if (scope != null) throw new AiBusyException(AiBusyException.Context.HINT, scope);
-            throw e;
-        }
+        return find(puzzleId).getHint(n);
     }
 }

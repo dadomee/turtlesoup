@@ -13,6 +13,7 @@ public class Room {
     private String title;
     private String scenario;
     private String solution;
+    private String hint1, hint2, hint3;   // AI 방: 사전작성 힌트(문제-보관함과 동일) — 힌트 요청 시 LLM 없이 사용
     private volatile boolean ended;
     private volatile int hintsUsed;
     private boolean aiHosted;
@@ -24,9 +25,21 @@ public class Room {
     }
 
     public void setPuzzle(String title, String scenario, String solution) {
+        setPuzzle(title, scenario, solution, null, null, null);
+    }
+
+    // AI 방: 사전작성 힌트까지 함께 저장 → 힌트 요청 시 LLM 없이 그대로 내려준다
+    public void setPuzzle(String title, String scenario, String solution, String hint1, String hint2, String hint3) {
         this.title = title;
         this.scenario = scenario;
         this.solution = solution;
+        this.hint1 = hint1;
+        this.hint2 = hint2;
+        this.hint3 = hint3;
+    }
+
+    public String getHint(int n) {
+        return switch (n) { case 1 -> hint1; case 2 -> hint2; case 3 -> hint3; default -> null; };
     }
 
     public boolean hasPuzzle() { return scenario != null; }
@@ -42,6 +55,7 @@ public class Room {
         this.title = null;
         this.scenario = null;
         this.solution = null;
+        this.hint1 = null; this.hint2 = null; this.hint3 = null;
         this.ended = false;
         this.hintsUsed = 0;
     }
