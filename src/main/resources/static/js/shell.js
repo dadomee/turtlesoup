@@ -37,7 +37,9 @@
 
     var backdrop = document.createElement("div");
     backdrop.className = "nav-backdrop";
-    document.body.appendChild(backdrop);
+    // .app이 position:fixed로 쌓임맥락을 만들어서, 배경막을 body가 아닌 .app 안에 넣어야
+    // 사이드바(.app 자식)가 배경막 위로 올라옴. (밖에 두면 사이드바가 배경막 아래 갇혀 까맣게 덮임)
+    (document.querySelector(".app") || document.body).appendChild(backdrop);
 
     function close() { sidebar.classList.remove("open"); backdrop.classList.remove("show"); }
     function open() { sidebar.classList.add("open"); backdrop.classList.add("show"); }

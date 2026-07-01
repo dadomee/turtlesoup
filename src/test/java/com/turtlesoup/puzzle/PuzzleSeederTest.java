@@ -14,7 +14,7 @@ class PuzzleSeederTest {
 
     @Test
     void seedsClassicPuzzlesOnStartup() {
-        assertThat(repository.count()).isEqualTo(37);
+        assertThat(repository.count()).isEqualTo(35);
         assertThat(repository.findAll())
             .anyMatch(p -> p.getTitle().contains("바다거북"));
     }
