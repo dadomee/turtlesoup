@@ -49,6 +49,22 @@
       a.addEventListener("click", close);
     });
   }
+  // 모바일 키보드가 올라와도 상단(문제)·하단(입력)이 안 밀리게:
+  // 앱 높이를 '실제 보이는 영역(visualViewport)'에 맞춰 키보드 뒤로 안 늘어나게 한다.
+  function setupViewportFit() {
+    var vv = window.visualViewport;
+    if (!vv) return;
+    var root = document.documentElement;
+    function fit() {
+      root.style.setProperty("--app-h", vv.height + "px");
+      root.style.setProperty("--app-top", vv.offsetTop + "px");
+    }
+    vv.addEventListener("resize", fit);
+    vv.addEventListener("scroll", fit);
+    fit();
+  }
+  setupViewportFit();
+
   if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", init);
   } else {
