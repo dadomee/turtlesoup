@@ -169,6 +169,13 @@ select { cursor: pointer; }
 .verdict.correct { background: var(--warn-bg); color: var(--warn); }
 .verdict.unknown { background: #eef0f4; color: var(--muted); }
 
+/* 답글 인용 — 판정(예/아니오) 위에 "어느 질문에 대한 답인지" 표시 */
+.reply-quote {
+  font-size: 12px; color: var(--muted); border-left: 2px solid var(--border);
+  padding: 1px 8px; margin-bottom: 4px; line-height: 1.4;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
+
 .composer { display: flex; gap: 8px; margin-top: 14px; }
 .composer input { flex: 1; }
 
@@ -233,4 +240,8 @@ select { cursor: pointer; }
   /* 보스 오버레이(Outlook): 모바일에선 폴더·본문 접고 메일 목록만 전체폭 */
   .ob-folders, .ob-pane { display: none; }
   .ob-list { width: 100%; border-right: none; }
+  /* 보스 버튼이 하단 전송/정답/힌트 버튼 위에 떠서 탭이 씹히던 문제 → 모바일에선 우상단으로 */
+  .boss-hint { top: 54px; right: 8px; bottom: auto; font-size: 11px; padding: 5px 9px; }
+  /* 문제(상황) 카드를 상단에 고정 — 채팅이 길어져도 질문이 안 사라지게 (모바일) */
+  .room-puzzle { position: sticky; top: 0; z-index: 5; max-height: 34vh; }
 }

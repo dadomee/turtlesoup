@@ -100,17 +100,19 @@ public class RoomSocketHandler extends TextWebSocketHandler {
                     "nickname", str(msg.get("nickname")), "text", text));
             }
             case "ask" -> {
-                if (!room.hasPuzzle()) return;
+                if (!room.hasPuzzle() || room.isEnded()) return;   // 종료 후엔 질문 불가(자유 채팅 chat만 허용)
                 broadcast(code, Map.of("type", "question",
                     "nickname", str(msg.get("nickname")), "text", str(msg.get("text"))));
-                if (room.isAiHosted() && !room.isEnded()) {
+                if (room.isAiHosted()) {
                     final String scenario = room.getScenario();
                     final String solution = room.getSolution();
                     final String q = str(msg.get("text"));
+                    final String asker = str(msg.get("nickname"));
                     aiPool.submit(() -> {
                         try {
                             Verdict v = ai.judge(scenario, solution, q);
-                            broadcast(code, Map.of("type", "answer", "verdict", v.name()));
+                            // 답에 질문 원문·질문자도 실어 보냄 → 클라이언트가 "어느 질문에 대한 답"인지 답글로 표시(순서 뒤섞여도 정확)
+                            broadcast(code, Map.of("type", "answer", "verdict", v.name(), "question", q, "asker", asker));
                             if (v == Verdict.CORRECT) {
                                 room.end();
                                 broadcast(code, Map.of("type", "system", "text", "🎉 정답입니다! 해설을 공개해요."));

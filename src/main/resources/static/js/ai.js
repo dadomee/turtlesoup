@@ -307,6 +307,8 @@ function showList() {
 }
 
 document.getElementById("ask-btn").addEventListener("click", ask);
+// 손으로 전송 버튼 탭할 때 input 포커스 유지 → 모바일 키보드 안 내려감(엔터와 동일)
+document.getElementById("ask-btn").addEventListener("mousedown", e => e.preventDefault());
 document.getElementById("hint-btn").addEventListener("click", useHint);
 document.getElementById("question-input").addEventListener("keydown", e => {
   if (e.key === "Enter" && !e.isComposing) ask();
