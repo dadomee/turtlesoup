@@ -8,17 +8,24 @@ import java.util.List;
 @Component
 public class PuzzleSeeder implements CommandLineRunner {
 
-    private final PuzzleRepository repository;
+    // 문제/힌트를 바꿀 때마다 +1 하면 다음 배포에서 자동으로 재시드된다(Neon에 SQL 칠 필요 없음).
+    private static final int SEED_VERSION = 2;
 
-    public PuzzleSeeder(PuzzleRepository repository) {
+    private final PuzzleRepository repository;
+    private final SeedMetaRepository seedMeta;
+
+    public PuzzleSeeder(PuzzleRepository repository, SeedMetaRepository seedMeta) {
         this.repository = repository;
+        this.seedMeta = seedMeta;
     }
 
     @Override
     public void run(String... args) {
-        if (repository.count() > 0) {
-            return; // 이미 적재됨 — 멱등
+        int applied = seedMeta.findById(1).map(SeedMeta::getVersion).orElse(-1);
+        if (applied == SEED_VERSION) {
+            return; // 이미 최신 버전으로 시드됨 — 멱등
         }
+        repository.deleteAll();   // 옛 문제 제거 후 최신 목록으로 재시드 (play_history는 FK 아니라 안전)
         repository.saveAll(List.of(
             new Puzzle(
                 "바다거북 스프",
@@ -107,8 +114,8 @@ public class PuzzleSeeder implements CommandLineRunner {
                 "그것은 나무로 지은 오두막이 아니라, 숲에 추락한 비행기의 동체였다. 탑승객 전원이 추락 사고로 사망한 것이다.",
                 Difficulty.NORMAL, "고전,반전,사고",
                 "그 '오두막'은 누가 숲에 지은 집이 아니에요. 원래 다른 곳에 있다가 이 숲으로 들어온 물체예요.",
-                "여러 사람이 한꺼번에 타고 이동하던 밀폐된 공간이, 사고로 숲 한가운데 떨어진 거예요. 흉기가 없는 이유죠.",
-                "그 밀폐된 공간이 원래 하늘을 날던 것이었다면, 숲 한가운데 떨어진 그것은 무엇이고 안의 사람들에게 무슨 일이 있었을까요?"
+                "그건 사람 여럿을 태우고 다니던 '탈것'이에요. 그래서 안에는 사람만 있고 흉기가 없죠.",
+                "그 탈것이 원래 하늘을 날던 것이고 숲 한가운데로 추락했다면, 오두막처럼 보인 그것의 정체와 사람들의 운명이 보일 거예요."
             ),
             new Puzzle(
                 "세 개의 방",
@@ -161,8 +168,8 @@ public class PuzzleSeeder implements CommandLineRunner {
                 "철수는 선천적 장애를 안고 태어나 평생 지하실에서 격리되어 자라온 아이였다. 그가 문을 열고 본 것은, 자신을 지하에 가둔 채 위층에서 화목하고 평범하게 살아온 가족의 모습이었다. 자신만 가족에게서 배제되어 있었다는 사실에 충격을 받은 것이다.",
                 Difficulty.HARD, "충격,슬픔",
                 "충격의 정체는 무서운 괴물이 아니에요. 철수가 본 건 오히려 지극히 평범하고 화목한 광경이었어요.",
-                "관점을 뒤집어 보세요. 이 집에서 지하실에 갇혀 살아온 사람은 다름 아닌 철수 자신이었어요. 문 너머가 바로 '바깥세상'이죠.",
-                "문을 열고 본 것이 위층에서 자기만 빼고 평범하고 화목하게 살아온 가족의 모습이었다면, 철수는 그동안 자신이 어떤 존재로 어디에 갇혀 살았다고 느꼈을까요?"
+                "'무엇을 봤나'보다 '누가 어디에 갇혀 있었나'를 뒤집어 보세요. 문 안쪽과 바깥쪽 중, 갇혀 있던 쪽은 어디였을까요?",
+                "사실 지하실에 갇혀 자란 건 철수 자신이고, 문 너머는 자기만 빼고 화목하게 지내온 가족의 일상이었어요. 그 광경이 철수에게 어떤 의미였을지 생각해 보세요."
             ),
             new Puzzle(
                 "등대지기의 불",
@@ -179,8 +186,8 @@ public class PuzzleSeeder implements CommandLineRunner {
                 "건물 전체가 정전이 되어 엘리베이터가 멈춰 있었다. 그녀의 남편은 심장병 환자로, 전기로 작동하는 생명 유지 의료기기에 의존해 살고 있었다. 정전이 됐다는 것은 그 기계도 멈췄다는 뜻이므로, 남편이 사망했음을 직감한 것이다.",
                 Difficulty.NORMAL, "슬픔,추리",
                 "엘리베이터가 멈춘 건 고장이 아니에요. 건물 전체가 정전되어 모든 전기가 끊겼다는 신호였어요.",
-                "그녀의 남편은 심장병 환자로, 집에서 전기로 작동하는 생명 유지 의료기기에 의존해 살고 있었어요.",
-                "건물이 정전되어 그 의료기기까지 멈췄다면, 기계 없이는 살 수 없는 남편에게 무슨 일이 일어났을지 그녀는 직감한 거예요."
+                "그녀의 남편은 혼자 힘으로는 살기 어려운 환자로, 집에서 늘 어떤 '기계'에 의지해 지냈어요.",
+                "그 기계가 전기로 돌아가는 생명 유지 장치였다면, 정전으로 전기가 끊긴 순간 남편에게 무슨 일이 닥쳤을지 그녀는 직감한 거예요."
             ),
             new Puzzle(
                 "도시락이 든 가방",
@@ -223,9 +230,9 @@ public class PuzzleSeeder implements CommandLineRunner {
                 "새해까지 10분 남은 시각, 만원 지하철 안에서 한 남자가 승객들의 나이를 차례로 정확히 맞혔다. 그런데 모두의 나이를 다 맞힌 직후, 남자의 얼굴이 새파랗게 질렸다. 왜일까?",
                 "남자는 사람의 남은 수명이 보이는 능력을 가지고 있었고, 그가 맞힌 것은 나이가 아니라 각자에게 남은 수명이었다. 차 안 모든 사람의 남은 수명이 현재 나이와 정확히 일치한다는 것은, 곧 새해가 되는 순간 이 지하철에 탄 사람 전원이 사고로 사망한다는 의미였다.",
                 Difficulty.HARD, "공포,초자연",
-                "남자는 사실 나이를 맞힌 게 아니에요. 그에게는 사람의 머리 위로 다른 숫자가 보이는 능력이 있어요. 바로 '남은 수명'이죠.",
-                "그러니까 그가 말한 숫자는 그 사람이 앞으로 살 햇수예요. 그 값이 나이와 똑같다는 건, 곧 모두의 수명이 다한다는 뜻이죠.",
-                "차 안 모든 사람의 남은 수명이 동시에 0에 다다른다면, 새해까지 단 10분 남은 지금 이 지하철 전체에 무슨 일이 닥치려는 걸까요?"
+                "남자가 맞힌 게 정말 '나이'였을까요? 그의 눈에는 사람마다 머리 위로 다른 숫자가 보였는지도 몰라요.",
+                "그 숫자는 나이가 아니라 '앞으로 남은 무언가'였어요. 그게 하필 지금 나이와 똑같다면 섬뜩한 뜻이 되죠.",
+                "그 숫자가 '남은 수명'이고 차 안 모두가 같은 값이라면, 새해까지 10분 남은 이 지하철에 곧 무슨 일이 닥치는 걸까요?"
             ),
             new Puzzle(
                 "거울 속의 여자",
@@ -233,8 +240,8 @@ public class PuzzleSeeder implements CommandLineRunner {
                 "거울 뒤편은 사실 옆방과 연결된 투명한 유리(매직미러)였다. 그동안 거울이라 믿었던 것 너머에서, 낯선 누군가가 그녀의 일상을 매일 밤 지켜보고 있었다는 사실을 그날 밤 깨달은 것이다.",
                 Difficulty.HARD, "공포,오싹",
                 "여자가 비명을 지른 건 자기 얼굴 때문이 아니에요. 그녀가 거울이라 믿었던 그것의 정체가 문제였어요.",
-                "한쪽에서는 평범한 거울처럼 보이지만, 반대편에서는 유리창처럼 안이 훤히 들여다보이는 '매직미러'라는 게 있어요.",
-                "그 거울 뒤가 옆방과 연결된 매직미러였다면, 매일 밤 그녀가 그 앞에서 화장을 지우는 모습을 반대편에서 누군가 지켜보고 있었던 것 아닐까요?"
+                "그 거울이 사실 한쪽에서만 비치는 유리였다면요? 반대편에서는 이쪽이 창문처럼 훤히 들여다보이는.",
+                "거울 뒤가 옆방과 통하는 매직미러였다면, 매일 밤 화장을 지우던 그녀를 반대편에서 누군가 지켜보고 있었던 거예요."
             ),
             new Puzzle(
                 "같은 잔, 다른 운명",
@@ -336,5 +343,6 @@ public class PuzzleSeeder implements CommandLineRunner {
                 "닫힌 공간 안과 바깥의 기압이 크게 다른 채로 문이 열리면 어떤 일이 벌어질까요? 그가 탄 것이 무엇이었을지 생각하면, 문 너머로 그가 어떻게 됐는지 보일 거예요."
             )
         ));
+        seedMeta.save(new SeedMeta(1, SEED_VERSION));
     }
 }
